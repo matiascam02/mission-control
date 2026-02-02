@@ -6,6 +6,7 @@ import { Activity, Zap, AlertCircle, CheckCircle2 } from 'lucide-react';
 interface AgentCardProps {
   agent: DbAgent;
   compact?: boolean;
+  onClick?: () => void;
 }
 
 const statusConfig: Record<string, { 
@@ -46,7 +47,7 @@ const levelConfig: Record<string, { class: string; gradient: string }> = {
   INT: { class: 'badge-int', gradient: 'from-zinc-500 to-zinc-600' },
 };
 
-export function AgentCard({ agent, compact = false }: AgentCardProps) {
+export function AgentCard({ agent, compact = false, onClick }: AgentCardProps) {
   const color = agent.color || '#f97316';
   const status = statusConfig[agent.status] || statusConfig.idle;
   const level = levelConfig[agent.level] || levelConfig.INT;
@@ -54,7 +55,10 @@ export function AgentCard({ agent, compact = false }: AgentCardProps) {
   
   if (compact) {
     return (
-      <div className="sidebar-item group flex items-center gap-3 p-2.5 cursor-pointer">
+      <div 
+        className="sidebar-item group flex items-center gap-3 p-2.5 cursor-pointer"
+        onClick={onClick}
+      >
         {/* Avatar with status */}
         <div className="relative flex-shrink-0">
           <div 
@@ -94,11 +98,12 @@ export function AgentCard({ agent, compact = false }: AgentCardProps) {
 
   return (
     <div 
-      className="card p-5 animate-fade-in-up group"
+      className="card p-5 animate-fade-in-up group cursor-pointer"
       style={{ 
         animationDelay: `${Math.random() * 0.2}s`,
         borderColor: agent.status === 'working' ? color + '30' : undefined
       }}
+      onClick={onClick}
     >
       {/* Header */}
       <div className="flex items-start gap-4">

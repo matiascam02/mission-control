@@ -9,9 +9,10 @@ interface SidebarProps {
   onTabChange: (tab: string) => void;
   agents: DbAgent[];
   onClose?: () => void;
+  onAgentClick?: (agent: DbAgent) => void;
 }
 
-export function Sidebar({ activeTab, onTabChange, agents, onClose }: SidebarProps) {
+export function Sidebar({ activeTab, onTabChange, agents, onClose, onAgentClick }: SidebarProps) {
   const activeAgents = agents.filter(a => a.status === 'working').length;
   const blockedAgents = agents.filter(a => a.status === 'blocked').length;
 
@@ -76,7 +77,7 @@ export function Sidebar({ activeTab, onTabChange, agents, onClose }: SidebarProp
               className="animate-fade-in-up"
               style={{ animationDelay: `${index * 0.05}s` }}
             >
-              <AgentCard agent={agent} compact />
+              <AgentCard agent={agent} compact onClick={() => onAgentClick?.(agent)} />
             </div>
           ))}
         </div>

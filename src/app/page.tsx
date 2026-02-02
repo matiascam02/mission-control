@@ -6,6 +6,7 @@ import { Header } from '@/components/Header';
 import { StatsCards } from '@/components/StatsCards';
 import { TaskBoard } from '@/components/TaskBoard';
 import { ActivityFeed } from '@/components/ActivityFeed';
+import { AgentDetail } from '@/components/AgentDetail';
 import { supabase, DbAgent, DbTask, DbActivity } from '@/lib/supabase';
 import { Menu, X, Activity, Sparkles } from 'lucide-react';
 
@@ -17,6 +18,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [feedOpen, setFeedOpen] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState<DbAgent | null>(null);
 
   // Fetch initial data
   useEffect(() => {
@@ -118,7 +120,8 @@ export default function Home() {
           activeTab={activeTab} 
           onTabChange={setActiveTab} 
           agents={agents} 
-          onClose={() => setSidebarOpen(false)} 
+          onClose={() => setSidebarOpen(false)}
+          onAgentClick={(agent) => setSelectedAgent(agent)}
         />
       </div>
       
@@ -208,6 +211,15 @@ export default function Home() {
             </div>
           </div>
         </>
+      )}
+
+      {/* Agent Detail Modal */}
+      {selectedAgent && (
+        <AgentDetail
+          agent={selectedAgent}
+          activities={activities}
+          onClose={() => setSelectedAgent(null)}
+        />
       )}
     </div>
   );
