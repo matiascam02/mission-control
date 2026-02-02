@@ -1,6 +1,7 @@
 'use client';
 
-import { DbTask, DbAgent } from '@/lib/supabase';
+import { useState } from 'react';
+import { DbTask, DbAgent, supabase } from '@/lib/supabase';
 import { 
   AlertCircle, 
   Inbox, 
@@ -9,8 +10,10 @@ import {
   CheckCircle2, 
   MoreHorizontal,
   Tag,
-  Clock
+  Clock,
+  GripVertical
 } from 'lucide-react';
+import { showToast } from './Toast';
 
 interface TaskBoardProps {
   tasks: DbTask[];
@@ -51,18 +54,36 @@ function formatTaskDate(dateStr: string): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-function TaskCard({ task, index }: { task: DbTask; index: number }) {
+interface TaskCardProps {
+  task: DbTask;
+  index: number;
+  onDragStart: (task: DbTask) => void;
+  isDragging: boolean;
+}
+
+function TaskCard({ task, index, onDragStart, isDragging }: TaskCardProps) {
   return (
     <div 
-      className="card p-4 hover:border-white/15 cursor-pointer group animate-fade-in-up"
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', task.id);
+        onDragStart(task);
+      }}
+      className={`card p-4 cursor-grab active:cursor-grabbing group animate-fade-in-up transition-all
+        ${isDragging ? 'opacity-50 scale-95 ring-2 ring-orange-500/50' : 'hover:border-white/15'}
+      `}
       style={{ animationDelay: `${index * 0.05}s` }}
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-2 mb-3">
-        <h4 className="text-sm font-medium text-white leading-snug group-hover:text-orange-400 transition-colors line-clamp-2">
-          {task.title}
-        </h4>
-        <button className="p-1 rounded-lg hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-all">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <GripVertical size={14} className="text-zinc-600 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <h4 className="text-sm font-medium text-white leading-snug group-hover:text-orange-400 transition-colors line-clamp-2">
+            {task.title}
+          </h4>
+        </div>
+        <button className="p-1 rounded-lg hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0">
           <MoreHorizontal size={14} className="text-zinc-500" />
         </button>
       </div>
@@ -117,44 +138,130 @@ function TaskCard({ task, index }: { task: DbTask; index: number }) {
 }
 
 export function TaskBoard({ tasks }: TaskBoardProps) {
+  const [draggingTask, setDraggingTask] = useState<DbTask | null>(null);
+  const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
+
+  const handleDrop = async (columnId: DbTask['status']) => {
+    if (!draggingTask || draggingTask.status === columnId) {
+      setDraggingTask(null);
+      setDragOverColumn(null);
+      return;
+    }
+
+    const oldStatus = draggingTask.status;
+    
+    try {
+      // Optimistic update - will be synced by real-time subscription
+      const { error } = await supabase
+        .from('tasks')
+        .update({ status: columnId, updated_at: new Date().toISOString() })
+        .eq('id', draggingTask.id);
+
+      if (error) throw error;
+
+      showToast({
+        type: 'success',
+        title: 'Task moved',
+        message: `"${draggingTask.title.slice(0, 30)}${draggingTask.title.length > 30 ? '...' : ''}" → ${columns.find(c => c.id === columnId)?.label}`,
+        duration: 3000,
+      });
+
+      // Log activity
+      await supabase.from('activities').insert({
+        type: 'task_moved',
+        title: `Task moved to ${columnId}`,
+        description: `"${draggingTask.title}" moved from ${oldStatus} to ${columnId}`,
+        metadata: { 
+          task_id: draggingTask.id, 
+          from: oldStatus, 
+          to: columnId 
+        },
+      });
+
+    } catch (error) {
+      console.error('Failed to update task:', error);
+      showToast({
+        type: 'error',
+        title: 'Failed to move task',
+        message: 'Please try again',
+      });
+    }
+
+    setDraggingTask(null);
+    setDragOverColumn(null);
+  };
+
   return (
     <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 lg:mx-0 lg:px-0">
       {columns.map((column, colIndex) => {
         const columnTasks = tasks.filter((t) => t.status === column.id);
         const Icon = column.icon;
+        const isOver = dragOverColumn === column.id;
         
         return (
           <div 
             key={column.id} 
             className="flex-shrink-0 w-72 animate-fade-in-up"
             style={{ animationDelay: `${colIndex * 0.1}s` }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'move';
+              setDragOverColumn(column.id);
+            }}
+            onDragLeave={() => setDragOverColumn(null)}
+            onDrop={(e) => {
+              e.preventDefault();
+              handleDrop(column.id);
+            }}
           >
             {/* Column Header */}
             <div className="flex items-center gap-3 mb-4 px-1">
-              <div className={`w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center`}>
+              <div className={`w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center transition-all ${
+                isOver ? 'scale-110 bg-white/10' : ''
+              }`}>
                 <Icon size={16} className={column.color} />
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-white text-sm">{column.label}</h3>
               </div>
-              <span className="text-xs font-bold text-zinc-600 bg-white/5 px-2.5 py-1 rounded-lg">
+              <span className={`text-xs font-bold px-2.5 py-1 rounded-lg transition-colors ${
+                isOver ? 'text-orange-400 bg-orange-500/20' : 'text-zinc-600 bg-white/5'
+              }`}>
                 {columnTasks.length}
               </span>
             </div>
             
             {/* Column Content */}
-            <div className="task-column p-2 min-h-[200px]">
+            <div className={`task-column p-2 min-h-[200px] transition-all rounded-xl ${
+              isOver 
+                ? 'bg-orange-500/10 border-2 border-dashed border-orange-500/40' 
+                : 'border-2 border-transparent'
+            }`}>
               <div className="space-y-2">
                 {columnTasks.map((task, index) => (
-                  <TaskCard key={task.id} task={task} index={index} />
+                  <TaskCard 
+                    key={task.id} 
+                    task={task} 
+                    index={index}
+                    onDragStart={setDraggingTask}
+                    isDragging={draggingTask?.id === task.id}
+                  />
                 ))}
                 {columnTasks.length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-                    <div className={`w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center mb-3`}>
-                      <Icon size={18} className="text-zinc-600" />
+                  <div className={`flex flex-col items-center justify-center py-12 px-4 text-center transition-all ${
+                    isOver ? 'scale-105' : ''
+                  }`}>
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-colors ${
+                      isOver ? 'bg-orange-500/20' : 'bg-white/5'
+                    }`}>
+                      <Icon size={18} className={isOver ? 'text-orange-400' : 'text-zinc-600'} />
                     </div>
-                    <p className="text-xs text-zinc-600 font-medium">No tasks</p>
-                    <p className="text-[10px] text-zinc-700 mt-1">Drop tasks here</p>
+                    <p className={`text-xs font-medium ${isOver ? 'text-orange-400' : 'text-zinc-600'}`}>
+                      {isOver ? 'Drop here' : 'No tasks'}
+                    </p>
+                    <p className="text-[10px] text-zinc-700 mt-1">
+                      {isOver ? 'Release to move' : 'Drag tasks here'}
+                    </p>
                   </div>
                 )}
               </div>
