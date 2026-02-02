@@ -10,6 +10,7 @@ import { AgentDialogView } from '@/components/AgentDialogView';
 import { IsometricWorld } from '@/components/IsometricWorld';
 import { supabase, DbAgent, DbTask, DbActivity } from '@/lib/supabase';
 import { Menu, X, Activity, Sparkles, LayoutDashboard, Globe } from 'lucide-react';
+import { showAgentStatusToast } from '@/components/Toast';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -50,7 +51,20 @@ export default function Home() {
       .channel('agents-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'agents' }, (payload) => {
         if (payload.eventType === 'UPDATE') {
-          setAgents(prev => prev.map(a => a.id === payload.new.id ? payload.new as DbAgent : a));
+          const newAgent = payload.new as DbAgent;
+          const oldAgent = agents.find(a => a.id === newAgent.id);
+          
+          // Show toast if status changed
+          if (oldAgent && oldAgent.status !== newAgent.status) {
+            showAgentStatusToast(
+              newAgent.name,
+              newAgent.emoji || '🤖',
+              newAgent.status,
+              newAgent.current_task || undefined
+            );
+          }
+          
+          setAgents(prev => prev.map(a => a.id === newAgent.id ? newAgent : a));
         }
       })
       .subscribe();
