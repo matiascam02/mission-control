@@ -39,6 +39,8 @@ export interface DbActivity {
   type: string;
   agent_id: string | null;
   task_id: string | null;
+  title: string;
+  description: string | null;
   message: string;
   metadata: Record<string, unknown>;
   created_at: string;

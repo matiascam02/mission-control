@@ -5,6 +5,8 @@ import { Sidebar } from '@/components/Sidebar';
 import { Header } from '@/components/Header';
 import { StatsCards } from '@/components/StatsCards';
 import { SquadStatus } from '@/components/SquadStatus';
+import { HealthMonitor } from '@/components/HealthMonitor';
+import { ActivityTimeline } from '@/components/ActivityTimeline';
 import { TaskBoard } from '@/components/TaskBoard';
 import { ActivityFeed } from '@/components/ActivityFeed';
 import { AgentDialogView } from '@/components/AgentDialogView';
@@ -188,6 +190,12 @@ export default function Home() {
 
                 {/* Squad Status with Animated Sprites */}
                 <SquadStatus agents={agents} onAgentClick={setSelectedAgent} />
+
+                {/* Monitoring Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                  <HealthMonitor agents={agents} onAgentClick={setSelectedAgent} />
+                  <ActivityTimeline activities={activities} agents={agents} limit={8} />
+                </div>
                 
                 {/* Task Board Section */}
                 <div className="mb-4">
