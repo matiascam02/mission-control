@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { DbAgent, DbActivity, supabase } from '@/lib/supabase';
 import { X, Send, Zap, MessageCircle } from 'lucide-react';
 import Image from 'next/image';
+import { AgentSprite, hasSprite } from './AgentSprite';
 
 interface ChatMessage {
   id: string;
@@ -146,28 +147,32 @@ export function AgentDetail({ agent, activities, onClose }: AgentDetailProps) {
         {/* Character Header - RPG Style */}
         <div className="relative p-6 pb-4">
           <div className="flex items-start gap-4">
-            {/* Avatar Frame */}
+            {/* Avatar Frame - Large sprite or image */}
             <div className="relative flex-shrink-0">
               <div 
-                className={`w-24 h-24 rounded-xl overflow-hidden border-2 ${status.glow}`}
-                style={{ borderColor: agent.color || '#3b82f6' }}
+                className={`w-28 h-28 rounded-xl overflow-hidden border-2 ${status.glow} flex items-center justify-center`}
+                style={{ 
+                  borderColor: agent.color || '#3b82f6',
+                  backgroundColor: hasSprite(agent.id) ? 'transparent' : (agent.color || '#3b82f6') + '20'
+                }}
               >
-                {agent.avatar_url ? (
+                {hasSprite(agent.id) ? (
+                  <AgentSprite 
+                    agentId={agent.id} 
+                    status={agent.status as any} 
+                    size={112} 
+                  />
+                ) : agent.avatar_url ? (
                   <Image
                     src={agent.avatar_url}
                     alt={agent.name}
-                    width={96}
-                    height={96}
+                    width={112}
+                    height={112}
                     className="w-full h-full object-cover"
                     unoptimized
                   />
                 ) : (
-                  <div
-                    className="w-full h-full flex items-center justify-center text-3xl"
-                    style={{ backgroundColor: agent.color || '#3b82f6' }}
-                  >
-                    {agent.emoji}
-                  </div>
+                  <span className="text-4xl">{agent.emoji}</span>
                 )}
               </div>
               {/* Status Badge */}

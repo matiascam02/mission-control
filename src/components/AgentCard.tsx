@@ -2,6 +2,7 @@
 
 import { DbAgent } from '@/lib/supabase';
 import { Activity, Zap, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { AgentSprite, hasSprite } from './AgentSprite';
 
 interface AgentCardProps {
   agent: DbAgent;
@@ -62,13 +63,17 @@ export function AgentCard({ agent, compact = false, onClick }: AgentCardProps) {
         {/* Avatar with status */}
         <div className="relative flex-shrink-0">
           <div 
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-lg transition-transform group-hover:scale-105"
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-lg transition-transform group-hover:scale-105 overflow-hidden"
             style={{ 
               backgroundColor: color + '15',
               boxShadow: agent.status === 'working' ? `0 0 20px ${color}30` : 'none'
             }}
           >
-            {agent.emoji || '🤖'}
+            {hasSprite(agent.id) ? (
+              <AgentSprite agentId={agent.id} status={agent.status as any} size={36} />
+            ) : (
+              agent.emoji || '🤖'
+            )}
           </div>
           <div 
             className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#141414] ${status.class}`}
@@ -110,13 +115,17 @@ export function AgentCard({ agent, compact = false, onClick }: AgentCardProps) {
         {/* Avatar */}
         <div className="relative">
           <div 
-            className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-all duration-300 group-hover:scale-105"
+            className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-all duration-300 group-hover:scale-105 overflow-hidden"
             style={{ 
               backgroundColor: color + '15',
               boxShadow: agent.status === 'working' ? `0 4px 24px ${color}40` : 'none'
             }}
           >
-            {agent.emoji || '🤖'}
+            {hasSprite(agent.id) ? (
+              <AgentSprite agentId={agent.id} status={agent.status as any} size={56} />
+            ) : (
+              agent.emoji || '🤖'
+            )}
           </div>
           <div 
             className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-[3px] border-[#1a1a1a] ${status.class}`}
