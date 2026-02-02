@@ -26,6 +26,55 @@ const SPRITE_CONFIGS: Record<string, Record<string, SpriteConfig>> = {
     done: { src: '/sprites/hoyuelo-v2/idle.png', frames: 4, cols: 2, rows: 2, fps: 4 },
     blocked: { src: '/sprites/hoyuelo-v2/idle.png', frames: 4, cols: 2, rows: 2, fps: 2 },
   },
+  franky: {
+    idle: { src: '/sprites/franky/idle.png', frames: 4, cols: 4, rows: 1, fps: 6 },
+    working: { src: '/sprites/franky/attack.png', frames: 4, cols: 4, rows: 1, fps: 8 },
+    walk: { src: '/sprites/franky/walk.png', frames: 4, cols: 4, rows: 1, fps: 8 },
+    done: { src: '/sprites/franky/idle.png', frames: 4, cols: 4, rows: 1, fps: 4 },
+    blocked: { src: '/sprites/franky/idle.png', frames: 4, cols: 4, rows: 1, fps: 2 },
+  },
+  maomao: {
+    idle: { src: '/sprites/maomao/idle.png', frames: 4, cols: 4, rows: 1, fps: 6 },
+    working: { src: '/sprites/maomao/attack.png', frames: 4, cols: 4, rows: 1, fps: 8 },
+    walk: { src: '/sprites/maomao/walk.png', frames: 4, cols: 4, rows: 1, fps: 8 },
+    done: { src: '/sprites/maomao/idle.png', frames: 4, cols: 4, rows: 1, fps: 4 },
+    blocked: { src: '/sprites/maomao/idle.png', frames: 4, cols: 4, rows: 1, fps: 2 },
+  },
+  reigen: {
+    idle: { src: '/sprites/reigen/idle.png', frames: 4, cols: 4, rows: 1, fps: 6 },
+    working: { src: '/sprites/reigen/attack.png', frames: 4, cols: 4, rows: 1, fps: 8 },
+    walk: { src: '/sprites/reigen/walk.png', frames: 4, cols: 4, rows: 1, fps: 8 },
+    done: { src: '/sprites/reigen/idle.png', frames: 4, cols: 4, rows: 1, fps: 4 },
+    blocked: { src: '/sprites/reigen/idle.png', frames: 4, cols: 4, rows: 1, fps: 2 },
+  },
+  robin: {
+    idle: { src: '/sprites/robin/idle.png', frames: 4, cols: 4, rows: 1, fps: 6 },
+    working: { src: '/sprites/robin/attack.png', frames: 4, cols: 4, rows: 1, fps: 8 },
+    walk: { src: '/sprites/robin/walk.png', frames: 4, cols: 4, rows: 1, fps: 8 },
+    done: { src: '/sprites/robin/idle.png', frames: 4, cols: 4, rows: 1, fps: 4 },
+    blocked: { src: '/sprites/robin/idle.png', frames: 4, cols: 4, rows: 1, fps: 2 },
+  },
+  nanami: {
+    idle: { src: '/sprites/nanami/idle.png', frames: 4, cols: 4, rows: 1, fps: 6 },
+    working: { src: '/sprites/nanami/attack.png', frames: 4, cols: 4, rows: 1, fps: 8 },
+    walk: { src: '/sprites/nanami/walk.png', frames: 4, cols: 4, rows: 1, fps: 8 },
+    done: { src: '/sprites/nanami/idle.png', frames: 4, cols: 4, rows: 1, fps: 4 },
+    blocked: { src: '/sprites/nanami/idle.png', frames: 4, cols: 4, rows: 1, fps: 2 },
+  },
+  frieren: {
+    idle: { src: '/sprites/frieren/idle.png', frames: 4, cols: 4, rows: 1, fps: 6 },
+    working: { src: '/sprites/frieren/attack.png', frames: 4, cols: 4, rows: 1, fps: 8 },
+    walk: { src: '/sprites/frieren/walk.png', frames: 4, cols: 4, rows: 1, fps: 8 },
+    done: { src: '/sprites/frieren/idle.png', frames: 4, cols: 4, rows: 1, fps: 4 },
+    blocked: { src: '/sprites/frieren/idle.png', frames: 4, cols: 4, rows: 1, fps: 2 },
+  },
+  rimuru: {
+    idle: { src: '/sprites/rimuru/idle.png', frames: 4, cols: 4, rows: 1, fps: 6 },
+    working: { src: '/sprites/rimuru/attack.png', frames: 4, cols: 4, rows: 1, fps: 8 },
+    walk: { src: '/sprites/rimuru/walk.png', frames: 4, cols: 4, rows: 1, fps: 8 },
+    done: { src: '/sprites/rimuru/idle.png', frames: 4, cols: 4, rows: 1, fps: 4 },
+    blocked: { src: '/sprites/rimuru/idle.png', frames: 4, cols: 4, rows: 1, fps: 2 },
+  },
 };
 
 export function AgentSprite({ agentId, status, size = 64, className = '' }: AgentSpriteProps) {
