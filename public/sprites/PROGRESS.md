@@ -7,4 +7,4 @@
 - [x] Robin (5/5 sprites) ✅
 - [x] Nanami (5/5 sprites) ✅
 - [ ] Frieren (0/4 sprites)
-- [ ] Rimuru (0/4 sprites)
+- [x] Rimuru (5/5 sprites) ✅
