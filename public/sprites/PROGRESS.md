@@ -1,7 +1,7 @@
 # Sprites Generation Progress
 
 - [x] Hoyuelo (5/5 sprites) ✅
-- [ ] Franky (0/4 sprites)
+- [x] Franky (5/5 sprites) ✅
 - [x] Maomao (5/5 sprites) ✅
 - [x] Reigen (5/5 sprites) ✅
 - [ ] Robin (0/4 sprites)
