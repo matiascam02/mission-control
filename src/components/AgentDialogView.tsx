@@ -176,12 +176,12 @@ export function AgentDialogView({ agent, onClose }: AgentDialogViewProps) {
                 style={{ backgroundColor: popColor }}
               />
               
-              {/* Sprite container with breathing animation */}
-              <div className="relative w-[300px] h-[300px] md:w-[500px] md:h-[500px] flex items-center justify-center animate-breathe">
+              {/* Sprite container with breathing animation - 15% smaller */}
+              <div className="relative w-[255px] h-[255px] md:w-[425px] md:h-[425px] flex items-center justify-center animate-breathe">
                 <AgentSprite 
                   agentId={agent.id} 
                   status={agent.status as any}
-                  size={480}
+                  size={408}
                   className="drop-shadow-[0_0_30px_rgba(0,0,0,0.5)]"
                 />
               </div>
@@ -202,28 +202,31 @@ export function AgentDialogView({ agent, onClose }: AgentDialogViewProps) {
                 style={{ backgroundColor: popColor }} 
               />
 
-              {/* Name plate - Angled */}
-              <div className="relative z-10 mb-[-2px] ml-8 inline-block transform -skew-x-12">
-                <div 
-                  className="px-8 py-3 font-black text-2xl text-white shadow-lg border-t-2 border-l-2 border-r-2 border-white/20"
-                  style={{ 
-                    backgroundColor: popColor,
-                    boxShadow: `0 0 20px ${popColor}50`
-                  }}
-                >
-                  <span className="transform skew-x-12 inline-block tracking-widest uppercase">
-                    {agent.name}
-                  </span>
+              {/* Name plate and Role Badge - Inline, no gap */}
+              <div className="relative z-10 flex items-end gap-0">
+                {/* Name plate - Angled */}
+                <div className="inline-block transform -skew-x-12 mb-[-4px]">
+                  <div 
+                    className="px-8 py-2 font-black text-xl text-white shadow-lg border-t-2 border-l-2 border-r-2 border-white/20"
+                    style={{ 
+                      backgroundColor: popColor,
+                      boxShadow: `0 0 20px ${popColor}50`
+                    }}
+                  >
+                    <span className="transform skew-x-12 inline-block tracking-widest uppercase">
+                      {agent.name}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              
-              {/* Role Badge */}
-              <div className="relative z-10 mb-[-2px] ml-4 inline-block transform -skew-x-12">
-                 <div className="px-4 py-1 bg-yellow-400 text-black text-xs font-black uppercase tracking-widest shadow-lg">
-                   <span className="transform skew-x-12 inline-block">
-                     {currentMessage?.role === 'agent' ? '/// SPEAKING' : '/// YOU'}
-                   </span>
-                 </div>
+                
+                {/* Role Badge */}
+                <div className="inline-block transform -skew-x-12 mb-[-4px] ml-[-4px]">
+                   <div className="px-4 py-1 bg-yellow-400 text-black text-xs font-black uppercase tracking-widest shadow-lg">
+                     <span className="transform skew-x-12 inline-block">
+                       {currentMessage?.role === 'agent' ? '/// SPEAKING' : '/// YOU'}
+                     </span>
+                   </div>
+                </div>
               </div>
 
               {/* Main text box container */}
