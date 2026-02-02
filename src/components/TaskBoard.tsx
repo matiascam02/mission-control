@@ -71,14 +71,7 @@ function TaskCard({ task }: TaskCardProps) {
       )}
       
       {/* Footer with metadata */}
-      <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {task.agent_id && (
-            <div className="w-5 h-5 rounded-full bg-indigo-500/20 flex items-center justify-center text-[10px]">
-              🤖
-            </div>
-          )}
-        </div>
+      <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-end">
         <span className="text-[10px] text-zinc-600">
           {task.created_at && new Date(task.created_at).toLocaleDateString()}
         </span>

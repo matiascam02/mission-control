@@ -137,13 +137,6 @@ export function AgentCard({ agent, compact = false }: AgentCardProps) {
           <p className="text-sm text-zinc-300 line-clamp-2">{agent.current_task}</p>
         </div>
       )}
-      
-      {/* Status note if present */}
-      {agent.note && (
-        <div className="mt-3 text-xs text-zinc-500 italic truncate">
-          "{agent.note}"
-        </div>
-      )}
     </div>
   );
 }
