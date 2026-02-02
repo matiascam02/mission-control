@@ -1,0 +1,72 @@
+{
+  "character": "hoyuelo",
+  "displayName": "Hoyuelo",
+  "description": "Dimple from Mob Psycho 100 - a friendly green floating spirit ghost",
+  "version": "1.0.0",
+  "generatedAt": "2026-02-02T13:55:00Z",
+  "generatedBy": "franky",
+  "style": "32-bit pixel art",
+  "gridSize": "2x2",
+  "framesPerAnimation": 4,
+  "frameOrder": [
+    [0, 0], [1, 0],
+    [0, 1], [1, 1]
+  ],
+  "sprites": {
+    "base": {
+      "file": "hoyuelo-base.png",
+      "description": "Base character for reference"
+    },
+    "idle": {
+      "file": "hoyuelo-idle.png",
+      "description": "Floating/bobbing idle animation",
+      "frames": 4,
+      "frameWidth": 512,
+      "frameHeight": 512,
+      "fps": 6,
+      "loop": true
+    },
+    "working": {
+      "file": "hoyuelo-working.png",
+      "description": "Working/processing with sparkles and magic effects",
+      "frames": 4,
+      "frameWidth": 512,
+      "frameHeight": 512,
+      "fps": 8,
+      "loop": true
+    },
+    "walk": {
+      "file": "hoyuelo-walk.png",
+      "description": "Gliding/moving animation to the right",
+      "frames": 4,
+      "frameWidth": 512,
+      "frameHeight": 512,
+      "fps": 10,
+      "loop": true
+    }
+  },
+  "animations": {
+    "idle": {
+      "spriteSheet": "idle",
+      "sequence": [0, 1, 2, 3],
+      "pingPong": true
+    },
+    "working": {
+      "spriteSheet": "working",
+      "sequence": [0, 1, 2, 3],
+      "pingPong": false
+    },
+    "walkRight": {
+      "spriteSheet": "walk",
+      "sequence": [0, 1, 2, 3],
+      "pingPong": false
+    },
+    "walkLeft": {
+      "spriteSheet": "walk",
+      "sequence": [0, 1, 2, 3],
+      "flipX": true,
+      "pingPong": false
+    }
+  },
+  "notes": "Sprite sheets generated using fal.ai nano-banana-pro model. Each sprite sheet is 1024x1024 with 4 frames in a 2x2 grid (512x512 each). For walkLeft, flip the sprites horizontally."
+}

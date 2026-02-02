@@ -1,0 +1,47 @@
+{
+  "name": "hoyuelo",
+  "displayName": "Hoyuelo",
+  "character": "Dimple from Mob Psycho 100",
+  "description": "A green floating spirit with a mischievous grin",
+  "spriteSheet": "/sprites/hoyuelo-ai.png",
+  "frameWidth": 64,
+  "frameHeight": 64,
+  "animations": {
+    "idle": {
+      "name": "idle",
+      "description": "Floating/bobbing animation",
+      "row": 0,
+      "frames": 4,
+      "fps": 6,
+      "loop": true
+    },
+    "working": {
+      "name": "working",
+      "description": "Sparkles/typing animation with laptop",
+      "row": 1,
+      "frames": 4,
+      "fps": 8,
+      "loop": true
+    },
+    "walking": {
+      "name": "walking",
+      "description": "Moving left/right",
+      "row": 2,
+      "frames": 4,
+      "fps": 10,
+      "loop": true
+    }
+  },
+  "defaultAnimation": "idle",
+  "statusAnimationMap": {
+    "idle": "idle",
+    "working": "working",
+    "done": "idle",
+    "blocked": "idle"
+  },
+  "generated": {
+    "model": "fal-ai/nano-banana-pro",
+    "timestamp": "2026-02-02T13:55:00Z",
+    "version": "ai-v1"
+  }
+}
