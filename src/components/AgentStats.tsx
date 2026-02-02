@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 interface AgentStat {
   agent_id: string;
@@ -45,7 +45,6 @@ function xpProgress(xp: number, level: number): number {
 
 export function AgentStatsCard({ agentId }: { agentId: string }) {
   const [stats, setStats] = useState<AgentStat | null>(null);
-  const supabase = createClient();
 
   useEffect(() => {
     // Initial fetch
