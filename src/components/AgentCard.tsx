@@ -1,9 +1,9 @@
 'use client';
 
-import { Agent } from '@/lib/agents';
+import { DbAgent } from '@/lib/supabase';
 
 interface AgentCardProps {
-  agent: Agent;
+  agent: DbAgent;
   compact?: boolean;
 }
 
@@ -21,15 +21,17 @@ const levelColors: Record<string, string> = {
 };
 
 export function AgentCard({ agent, compact = false }: AgentCardProps) {
+  const color = agent.color || '#6366f1';
+  
   if (compact) {
     return (
       <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-800/50 cursor-pointer transition-colors">
         <div className="relative">
           <div 
             className="w-8 h-8 rounded-full flex items-center justify-center text-lg"
-            style={{ backgroundColor: agent.color + '20' }}
+            style={{ backgroundColor: color + '20' }}
           >
-            {agent.emoji}
+            {agent.emoji || '🤖'}
           </div>
           <div 
             className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-gray-900 ${statusColors[agent.status]}`}
@@ -54,9 +56,9 @@ export function AgentCard({ agent, compact = false }: AgentCardProps) {
         <div className="relative">
           <div 
             className="w-12 h-12 rounded-full flex items-center justify-center text-2xl"
-            style={{ backgroundColor: agent.color + '20' }}
+            style={{ backgroundColor: color + '20' }}
           >
-            {agent.emoji}
+            {agent.emoji || '🤖'}
           </div>
           <div 
             className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-gray-800 ${statusColors[agent.status]}`}
@@ -73,10 +75,10 @@ export function AgentCard({ agent, compact = false }: AgentCardProps) {
           <p className="text-xs text-gray-500 mt-1">{agent.anime}</p>
         </div>
       </div>
-      {agent.currentTask && (
+      {agent.current_task && (
         <div className="mt-3 p-2 bg-gray-700/50 rounded-lg">
           <p className="text-xs text-gray-400">Current task:</p>
-          <p className="text-sm text-white truncate">{agent.currentTask}</p>
+          <p className="text-sm text-white truncate">{agent.current_task}</p>
         </div>
       )}
     </div>

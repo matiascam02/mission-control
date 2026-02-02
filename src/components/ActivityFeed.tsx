@@ -1,47 +1,12 @@
 'use client';
 
-import { Activity } from '@/lib/types';
-import { getAgentById } from '@/lib/agents';
+import { DbActivity, DbAgent } from '@/lib/supabase';
 import { CheckCircle, MessageSquare, Play, ArrowRight } from 'lucide-react';
 
-// Sample activities for demo
-const sampleActivities: Activity[] = [
-  {
-    id: '1',
-    type: 'task_completed',
-    agentId: 'rimuru',
-    message: 'UI Phase 2 completed — 5 commits pushed',
-    timestamp: new Date(Date.now() - 1000 * 60 * 30),
-  },
-  {
-    id: '2',
-    type: 'task_completed',
-    agentId: 'frieren',
-    message: 'Updated 10+ Obsidian docs, created API Reference',
-    timestamp: new Date(Date.now() - 1000 * 60 * 45),
-  },
-  {
-    id: '3',
-    type: 'task_completed',
-    agentId: 'robin',
-    message: 'Verified integrations — Telegram ✅, WhatsApp 90%',
-    timestamp: new Date(Date.now() - 1000 * 60 * 50),
-  },
-  {
-    id: '4',
-    type: 'agent_started',
-    agentId: 'hoyuelo',
-    message: 'Started building Mission Control',
-    timestamp: new Date(Date.now() - 1000 * 60 * 5),
-  },
-  {
-    id: '5',
-    type: 'task_moved',
-    agentId: 'franky',
-    message: 'Test fixes task moved to IN_PROGRESS',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60),
-  },
-];
+interface ActivityFeedProps {
+  activities: DbActivity[];
+  agents: DbAgent[];
+}
 
 const iconMap: Record<string, typeof CheckCircle> = {
   task_completed: CheckCircle,
@@ -53,7 +18,8 @@ const iconMap: Record<string, typeof CheckCircle> = {
   status_changed: ArrowRight,
 };
 
-function formatTime(date: Date): string {
+function formatTime(dateStr: string): string {
+  const date = new Date(dateStr);
   const now = new Date();
   const diff = now.getTime() - date.getTime();
   const minutes = Math.floor(diff / 1000 / 60);
@@ -68,19 +34,21 @@ function formatTime(date: Date): string {
 }
 
 interface ActivityItemProps {
-  activity: Activity;
+  activity: DbActivity;
+  agents: DbAgent[];
 }
 
-function ActivityItem({ activity }: ActivityItemProps) {
-  const agent = getAgentById(activity.agentId);
+function ActivityItem({ activity, agents }: ActivityItemProps) {
+  const agent = agents.find(a => a.id === activity.agent_id);
   const Icon = iconMap[activity.type] || CheckCircle;
+  const color = agent?.color || '#6366f1';
 
   return (
     <div className="flex gap-3 p-3 hover:bg-gray-800/50 rounded-lg transition-colors">
       <div className="flex-shrink-0">
         <div 
           className="w-8 h-8 rounded-full flex items-center justify-center text-sm"
-          style={{ backgroundColor: agent?.color + '20' }}
+          style={{ backgroundColor: color + '20' }}
         >
           {agent?.emoji || '🤖'}
         </div>
@@ -88,16 +56,16 @@ function ActivityItem({ activity }: ActivityItemProps) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 text-sm">
           <Icon size={14} className="text-green-500" />
-          <span className="text-white font-medium">{agent?.name}</span>
+          <span className="text-white font-medium">{agent?.name || 'System'}</span>
         </div>
         <p className="text-sm text-gray-400 mt-0.5">{activity.message}</p>
-        <p className="text-xs text-gray-600 mt-1">{formatTime(activity.timestamp)}</p>
+        <p className="text-xs text-gray-600 mt-1">{formatTime(activity.created_at)}</p>
       </div>
     </div>
   );
 }
 
-export function ActivityFeed() {
+export function ActivityFeed({ activities, agents }: ActivityFeedProps) {
   return (
     <div className="bg-gray-900 rounded-xl border border-gray-800 h-full flex flex-col">
       <div className="p-4 border-b border-gray-800">
@@ -118,9 +86,15 @@ export function ActivityFeed() {
         </div>
       </div>
       <div className="flex-1 overflow-y-auto">
-        {sampleActivities.map((activity) => (
-          <ActivityItem key={activity.id} activity={activity} />
-        ))}
+        {activities.length === 0 ? (
+          <div className="p-4 text-center text-gray-500 text-sm">
+            No activity yet
+          </div>
+        ) : (
+          activities.map((activity) => (
+            <ActivityItem key={activity.id} activity={activity} agents={agents} />
+          ))
+        )}
       </div>
     </div>
   );

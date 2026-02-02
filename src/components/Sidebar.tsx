@@ -1,6 +1,6 @@
 'use client';
 
-import { agents } from '@/lib/agents';
+import { DbAgent } from '@/lib/supabase';
 import { AgentCard } from './AgentCard';
 import { 
   LayoutDashboard, 
@@ -12,6 +12,7 @@ import {
 interface SidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  agents: DbAgent[];
 }
 
 const navItems = [
@@ -20,7 +21,7 @@ const navItems = [
   { id: 'tasks', label: 'Tasks', icon: ListTodo },
 ];
 
-export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
+export function Sidebar({ activeTab, onTabChange, agents }: SidebarProps) {
   const activeAgents = agents.filter(a => a.status === 'working').length;
 
   return (

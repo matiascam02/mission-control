@@ -1,12 +1,14 @@
 'use client';
 
-import { agents } from '@/lib/agents';
+import { DbAgent, DbTask } from '@/lib/supabase';
 import { Users, ListTodo, Radio, FileText } from 'lucide-react';
 
-export function Header() {
-  const activeAgents = agents.filter(a => a.status === 'working').length;
-  const totalTasks = 5; // Would come from state/API
+interface HeaderProps {
+  agents: DbAgent[];
+  tasks: DbTask[];
+}
 
+export function Header({ agents, tasks }: HeaderProps) {
   return (
     <header className="h-16 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-6">
       <div className="flex items-center gap-8">
@@ -18,7 +20,7 @@ export function Header() {
         <div className="flex items-center gap-2">
           <ListTodo size={18} className="text-gray-500" />
           <span className="text-white font-semibold">Tasks</span>
-          <span className="text-blue-400 font-bold">{totalTasks}</span>
+          <span className="text-blue-400 font-bold">{tasks.length}</span>
         </div>
       </div>
 
