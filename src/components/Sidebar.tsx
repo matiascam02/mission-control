@@ -2,7 +2,7 @@
 
 import { DbAgent } from '@/lib/supabase';
 import { AgentCard } from './AgentCard';
-import { LayoutDashboard, Users, ListTodo, Settings, X, Sparkles, Zap } from 'lucide-react';
+import { X, Sparkles, Zap } from 'lucide-react';
 
 interface SidebarProps {
   activeTab: string;
@@ -10,12 +10,6 @@ interface SidebarProps {
   agents: DbAgent[];
   onClose?: () => void;
 }
-
-const navItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'agents', label: 'Agents', icon: Users },
-  { id: 'tasks', label: 'Tasks', icon: ListTodo },
-];
 
 export function Sidebar({ activeTab, onTabChange, agents, onClose }: SidebarProps) {
   const activeAgents = agents.filter(a => a.status === 'working').length;
@@ -65,29 +59,6 @@ export function Sidebar({ activeTab, onTabChange, agents, onClose }: SidebarProp
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="p-3">
-        <p className="px-3 text-[10px] font-semibold text-zinc-600 uppercase tracking-wider mb-2">
-          Navigation
-        </p>
-        <div className="space-y-1">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => onTabChange(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                activeTab === item.id
-                  ? 'bg-gradient-to-r from-orange-500/20 to-red-500/10 text-orange-400 border border-orange-500/20 shadow-lg shadow-orange-500/5'
-                  : 'text-zinc-400 hover:bg-white/5 hover:text-white'
-              }`}
-            >
-              <item.icon size={18} />
-              <span>{item.label}</span>
-            </button>
-          ))}
-        </div>
-      </nav>
-
       {/* Agents List */}
       <div className="flex-1 overflow-y-auto px-3 py-2">
         <div className="flex items-center justify-between px-3 py-2 mb-2">
@@ -111,13 +82,6 @@ export function Sidebar({ activeTab, onTabChange, agents, onClose }: SidebarProp
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="p-3 border-t border-white/5">
-        <button className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-zinc-400 hover:bg-white/5 hover:text-white text-sm font-medium transition-all duration-200 group">
-          <Settings size={18} className="group-hover:rotate-90 transition-transform duration-300" />
-          <span>Settings</span>
-        </button>
-      </div>
     </aside>
   );
 }

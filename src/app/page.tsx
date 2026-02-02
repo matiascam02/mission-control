@@ -172,11 +172,8 @@ export default function Home() {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="text-lg font-semibold text-white">Task Board</h2>
-                  <p className="text-xs text-zinc-500 mt-0.5">Drag and drop to organize</p>
+                  <p className="text-xs text-zinc-500 mt-0.5">Tasks assigned to agents</p>
                 </div>
-                <button className="btn-secondary text-xs">
-                  + New Task
-                </button>
               </div>
               <TaskBoard tasks={tasks} agents={agents} />
             </div>
