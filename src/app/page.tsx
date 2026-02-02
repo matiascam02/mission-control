@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { Header } from '@/components/Header';
 import { StatsCards } from '@/components/StatsCards';
@@ -8,6 +8,8 @@ import { TaskBoard } from '@/components/TaskBoard';
 import { ActivityFeed } from '@/components/ActivityFeed';
 import { supabase, DbAgent, DbTask, DbActivity } from '@/lib/supabase';
 import { Menu, X } from 'lucide-react';
+
+const POLL_INTERVAL = 10000; // 10 seconds
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -17,29 +19,49 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [feedOpen, setFeedOpen] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Fetch initial data
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [agentsRes, tasksRes, activitiesRes] = await Promise.all([
-          supabase.from('agents').select('*').order('level'),
-          supabase.from('tasks').select('*').order('created_at', { ascending: false }),
-          supabase.from('activities').select('*').order('created_at', { ascending: false }).limit(20),
-        ]);
+  // Fetch data function - reusable for initial load, polling, and manual refresh
+  const fetchData = useCallback(async (showRefreshing = false) => {
+    if (showRefreshing) setIsRefreshing(true);
+    try {
+      const [agentsRes, tasksRes, activitiesRes] = await Promise.all([
+        supabase.from('agents').select('*').order('level'),
+        supabase.from('tasks').select('*').order('created_at', { ascending: false }),
+        supabase.from('activities').select('*').order('created_at', { ascending: false }).limit(20),
+      ]);
 
-        if (agentsRes.data) setAgents(agentsRes.data);
-        if (tasksRes.data) setTasks(tasksRes.data);
-        if (activitiesRes.data) setActivities(activitiesRes.data);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
-      }
+      if (agentsRes.data) setAgents(agentsRes.data);
+      if (tasksRes.data) setTasks(tasksRes.data);
+      if (activitiesRes.data) setActivities(activitiesRes.data);
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+      if (showRefreshing) setIsRefreshing(false);
     }
-
-    fetchData();
   }, []);
+
+  // Manual refresh handler
+  const handleRefresh = useCallback(() => {
+    fetchData(true);
+  }, [fetchData]);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Polling fallback - runs every 10 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchData(false); // Silent refresh for polling
+    }, POLL_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [fetchData]);
 
   // Real-time subscriptions
   useEffect(() => {
@@ -134,7 +156,13 @@ export default function Home() {
 
         {/* Desktop Header */}
         <div className="hidden lg:block">
-          <Header agents={agents} tasks={tasks} />
+          <Header 
+            agents={agents} 
+            tasks={tasks} 
+            lastUpdated={lastUpdated}
+            isRefreshing={isRefreshing}
+            onRefresh={handleRefresh}
+          />
         </div>
         
         <div className="flex-1 flex overflow-hidden">
