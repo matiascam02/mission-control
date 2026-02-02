@@ -2,47 +2,32 @@
 
 ## Task ID: 5cf2ca45-fa0e-4dc3-a12b-c5df46e5ea27
 
-## ✅ Implemented Features
+## ✅ Implemented Features (Enhanced)
 
-### 1. **Fullscreen Dialog View**
-- ✅ Backdrop oscuro con blur del dashboard
-- ✅ Background temático con gradiente basado en el color del agente
-- ✅ Animaciones de entrada/salida smooth
+### 1. **Visual Style (Psycho-Pop)**
+- ✅ **Dynamic Backgrounds:** Dot patterns, diagonal lines, and noise overlays based on agent color.
+- ✅ **Breathing Sprites:** Characters float and breathe (`animate-breathe`, `animate-float`) for a living look.
+- ✅ **Angled UI:** Nameplates and badges use `skew` transforms for that distinctive Danganronpa angular look.
+- ✅ **Tech Borders:** Dialog box features "tech corners" and thick borders.
 
-### 2. **Character Sprite Display**
-- ✅ Sprite grande del agente (400x400px) lado izquierdo
-- ✅ Glow effect detrás del sprite usando el color del agente
-- ✅ Animación slide-in desde la izquierda
-- ✅ Drop shadow para dar profundidad
+### 2. **Dialog System**
+- ✅ **Typewriter Effect:** Characters appear one by one.
+- ✅ **"Shoot!" Button:** Send button styled as a Truth Bullet trigger.
+- ✅ **Nonstop Debate Indicator:** Top-right status badge.
+- ✅ **Role Cards:** "Ultimate Talent" style role display.
 
-### 3. **Text Box (Danganronpa Style)**
-- ✅ Name plate con color del agente
-- ✅ Badge "SPEAKING" / "YOU" para indicar quién habla
-- ✅ **Typewriter effect** (30ms por carácter)
-- ✅ Click en el text box para skip del typewriter
-- ✅ Navegación entre mensajes (Prev/Next)
-- ✅ Contador de mensajes
+### 3. **Animations**
+- ✅ `animate-pop`: Bouncy entrance for buttons.
+- ✅ `animate-glitch`: (Prepared in CSS) for future error states.
+- ✅ `animate-float`: Gentle floating for the sprite.
 
-### 4. **Chat System**
-- ✅ Input field para escribir mensajes
-- ✅ Botón Send con glow effect cuando hay texto
-- ✅ Enter para enviar
-- ✅ Loading state mientras envía
-- ✅ Historia de mensajes navegable
-- ⚠️ **TODO:** Integrar con `sessions_send` API (actualmente mock)
+---
 
-### 5. **UI Elements**
-- ✅ Role badge (top-left)
-- ✅ "LIVE CHAT" indicator con dot pulsante (top-right)
-- ✅ Close button (X)
-- ✅ Smooth animations usando cubic-bezier easing
+## 🔧 Remaining TODOs
 
-### 6. **Animations**
-- ✅ `animate-fade-in` - Backdrop
-- ✅ `animate-slide-up` - Container principal
-- ✅ `animate-slide-in-left` - Character sprite
-- ✅ `animate-slide-up-delayed` - Text box
-- ✅ Typewriter effect en tiempo real
+### High Priority:
+1. **Real Backend Integration:** Connect `handleSend` to `sessions_send` API. Currently mock.
+2. **Mobile Optimization:** The heavy UI is optimized for desktop; mobile needs a simplified layout.
 
 ---
 

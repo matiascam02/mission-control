@@ -123,153 +123,213 @@ export function AgentDialogView({ agent, onClose }: AgentDialogViewProps) {
     }
   };
 
-  // Background color based on agent
-  const bgGradient = `linear-gradient(135deg, ${agent.color || '#3b82f6'}15 0%, #0a0a0a 50%)`;
+  // Background color based on agent with heavy pop overlay
+  const bgGradient = `linear-gradient(135deg, ${agent.color || '#3b82f6'}30 0%, #0a0a0a 90%)`;
+  const popColor = agent.color || '#3b82f6';
 
   return (
     <>
-      {/* Backdrop with blur */}
+      {/* Backdrop with blur and noise pattern */}
       <div 
-        className="fixed inset-0 bg-black/80 backdrop-blur-md z-40 animate-fade-in"
+        className="fixed inset-0 bg-black/90 backdrop-blur-xl z-40 animate-fade-in"
         onClick={onClose}
       />
 
       {/* Main Dialog Container */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+      <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none overflow-hidden">
         <div className="w-full h-full relative pointer-events-auto animate-slide-up">
           
-          {/* Background with themed gradient */}
+          {/* Background with themed gradient and dot pattern */}
           <div 
-            className="absolute inset-0"
-            style={{ background: bgGradient }}
+            className="absolute inset-0 opacity-80"
+            style={{ 
+              background: bgGradient,
+              backgroundImage: `
+                radial-gradient(${popColor}20 1px, transparent 1px),
+                linear-gradient(to right, ${popColor}05 1px, transparent 1px)
+              `,
+              backgroundSize: '30px 30px, 100px 100%'
+            }}
+          />
+          
+          {/* Moving diagonal lines overlay */}
+          <div className="absolute inset-0 opacity-10 pointer-events-none" 
+               style={{
+                 backgroundImage: `repeating-linear-gradient(45deg, ${popColor}, ${popColor} 10px, transparent 10px, transparent 20px)`
+               }}
           />
 
-          {/* Close button */}
+          {/* Close button - Styled like a trigger */}
           <button
             onClick={onClose}
-            className="absolute top-6 right-6 z-50 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors backdrop-blur-sm border border-white/20"
+            className="absolute top-8 right-8 z-50 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all hover:rotate-90 hover:scale-110 border-2 border-white/20 backdrop-blur-md group"
           >
-            <X size={20} className="text-white" />
+            <X size={24} className="text-white group-hover:text-red-400 transition-colors" />
           </button>
 
-          {/* Character Sprite - Large, centered-left */}
-          <div className="absolute left-[10%] top-1/2 -translate-y-1/2 animate-slide-in-left">
-            <div className="relative">
-              {/* Glow effect behind sprite */}
+          {/* Character Sprite - Large, breathing, floating */}
+          <div className="absolute left-[5%] md:left-[10%] top-1/2 -translate-y-1/2 animate-slide-in-left origin-bottom">
+            <div className="relative animate-float">
+              {/* Explosive background behind sprite */}
               <div 
-                className="absolute inset-0 blur-3xl opacity-50"
-                style={{ backgroundColor: agent.color || '#3b82f6' }}
+                className="absolute inset-0 blur-3xl opacity-30 animate-pulse"
+                style={{ backgroundColor: popColor }}
               />
               
-              {/* Sprite container */}
-              <div className="relative w-[400px] h-[400px] flex items-center justify-center">
+              {/* Sprite container with breathing animation */}
+              <div className="relative w-[300px] h-[300px] md:w-[500px] md:h-[500px] flex items-center justify-center animate-breathe">
                 <AgentSprite 
                   agentId={agent.id} 
                   status={agent.status as any}
-                  size={380}
-                  className="drop-shadow-2xl"
+                  size={480}
+                  className="drop-shadow-[0_0_30px_rgba(0,0,0,0.5)]"
                 />
               </div>
             </div>
           </div>
 
-          {/* Dialog Text Box - Bottom */}
-          <div className="absolute bottom-0 left-0 right-0 p-8 animate-slide-up-delayed">
+          {/* Dialog Text Box - Bottom with Tech Border */}
+          <div className="absolute bottom-0 left-0 right-0 p-4 md:p-12 animate-slide-up-delayed">
             
-            {/* Name plate */}
-            <div className="mb-4 flex items-center gap-3">
+            <div className="max-w-4xl mx-auto relative">
+              {/* Decorative elements */}
               <div 
-                className="px-6 py-2 rounded-t-xl font-bold text-lg backdrop-blur-md border-t-2 border-x-2 border-white/20"
-                style={{ 
-                  backgroundColor: agent.color || '#3b82f6',
-                  color: 'white'
-                }}
-              >
-                {agent.name}
-              </div>
-              <div className="px-4 py-1 bg-yellow-500 text-black text-xs font-bold rounded-full uppercase tracking-wider">
-                {currentMessage?.role === 'agent' ? 'Speaking' : 'You'}
-              </div>
-            </div>
-
-            {/* Main text box */}
-            <div 
-              className="bg-black/80 backdrop-blur-md border-2 border-white/20 rounded-2xl p-8 min-h-[160px] cursor-pointer transition-colors hover:bg-black/85"
-              onClick={handleTextBoxClick}
-            >
-              <p className="text-white text-xl leading-relaxed font-medium">
-                {displayedText}
-                {isTyping && <span className="inline-block w-2 h-5 bg-white ml-1 animate-pulse" />}
-              </p>
-
-              {/* Navigation controls */}
-              {!isTyping && (
-                <div className="mt-6 flex items-center justify-between">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handlePrev}
-                      disabled={!hasPrev}
-                      className="px-4 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg transition-colors text-sm text-white/70 font-medium"
-                    >
-                      ← Prev
-                    </button>
-                    <button
-                      onClick={handleNext}
-                      disabled={!hasNext}
-                      className="px-4 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg transition-colors text-sm text-white/70 font-medium"
-                    >
-                      Next →
-                    </button>
-                  </div>
-
-                  <div className="text-xs text-white/40 font-mono">
-                    {currentMessageIndex + 1} / {messages.length}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Input area */}
-            <div className="mt-4 flex gap-3">
-              <input
-                ref={inputRef}
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Type your message..."
-                disabled={isSending}
-                className="flex-1 px-6 py-4 bg-black/60 backdrop-blur-md border-2 border-white/20 rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:border-white/40 transition-colors disabled:opacity-50 text-lg"
+                className="absolute -top-16 left-0 w-32 h-1 animate-pulse" 
+                style={{ backgroundColor: popColor }} 
               />
-              <button
-                onClick={handleSend}
-                disabled={!input.trim() || isSending}
-                className="px-8 py-4 rounded-xl font-bold text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2"
-                style={{ 
-                  backgroundColor: agent.color || '#3b82f6',
-                  boxShadow: input.trim() && !isSending ? `0 0 30px ${agent.color}50` : 'none'
-                }}
+              <div 
+                className="absolute -top-12 left-0 w-16 h-1 opacity-50" 
+                style={{ backgroundColor: popColor }} 
+              />
+
+              {/* Name plate - Angled */}
+              <div className="relative z-10 mb-[-2px] ml-8 inline-block transform -skew-x-12">
+                <div 
+                  className="px-8 py-3 font-black text-2xl text-white shadow-lg border-t-2 border-l-2 border-r-2 border-white/20"
+                  style={{ 
+                    backgroundColor: popColor,
+                    boxShadow: `0 0 20px ${popColor}50`
+                  }}
+                >
+                  <span className="transform skew-x-12 inline-block tracking-widest uppercase">
+                    {agent.name}
+                  </span>
+                </div>
+              </div>
+              
+              {/* Role Badge */}
+              <div className="relative z-10 mb-[-2px] ml-4 inline-block transform -skew-x-12">
+                 <div className="px-4 py-1 bg-yellow-400 text-black text-xs font-black uppercase tracking-widest shadow-lg">
+                   <span className="transform skew-x-12 inline-block">
+                     {currentMessage?.role === 'agent' ? '/// SPEAKING' : '/// YOU'}
+                   </span>
+                 </div>
+              </div>
+
+              {/* Main text box container */}
+              <div 
+                className="relative bg-black/90 border-t-4 border-b-4 backdrop-blur-xl p-8 min-h-[200px] cursor-pointer group shadow-2xl"
+                style={{ borderColor: popColor }}
+                onClick={handleTextBoxClick}
               >
-                {isSending ? (
-                  <Loader2 size={20} className="animate-spin" />
-                ) : (
-                  <Send size={20} />
+                {/* Tech corners */}
+                <div className="absolute top-0 left-0 w-4 h-4 border-l-4 border-t-4 border-white" />
+                <div className="absolute top-0 right-0 w-4 h-4 border-r-4 border-t-4 border-white" />
+                <div className="absolute bottom-0 left-0 w-4 h-4 border-l-4 border-b-4 border-white" />
+                <div className="absolute bottom-0 right-0 w-4 h-4 border-r-4 border-b-4 border-white" />
+
+                {/* Text Content */}
+                <div className="relative z-10">
+                  <p className="text-white text-xl md:text-2xl leading-relaxed font-medium font-sans tracking-wide drop-shadow-md">
+                    <span className={isTyping ? "text-white" : "text-white/90"}>
+                      {displayedText}
+                    </span>
+                    {isTyping && <span className="inline-block w-3 h-6 bg-white ml-2 animate-pulse" />}
+                  </p>
+                </div>
+
+                {/* Navigation controls */}
+                {!isTyping && (
+                  <div className="absolute bottom-4 right-8 flex items-center gap-4 animate-pop">
+                    <div className="text-xs text-white/40 font-mono tracking-widest">
+                      MSG_ID: {currentMessageIndex + 1}/{messages.length}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handlePrev(); }}
+                        disabled={!hasPrev}
+                        className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/20 disabled:opacity-20 rounded-full transition-all hover:scale-110 border border-white/10"
+                      >
+                        ←
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleNext(); }}
+                        disabled={!hasNext}
+                        className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/20 disabled:opacity-20 rounded-full transition-all hover:scale-110 border border-white/10"
+                      >
+                        →
+                      </button>
+                    </div>
+                  </div>
                 )}
-                Send
-              </button>
+              </div>
+
+              {/* Input area - Floating below */}
+              <div className="mt-6 flex gap-4 transform translate-y-2">
+                <div className="flex-1 relative group">
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-white/20 to-white/5 rounded-xl blur opacity-30 group-hover:opacity-75 transition duration-200" />
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Enter your argument..."
+                    disabled={isSending}
+                    className="relative w-full px-6 py-4 bg-black/80 border-2 border-white/10 rounded-xl text-white placeholder:text-white/30 focus:outline-none focus:border-white/40 transition-all text-lg font-medium"
+                    style={{ 
+                      boxShadow: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.3)'
+                    }}
+                  />
+                </div>
+                
+                <button
+                  onClick={handleSend}
+                  disabled={!input.trim() || isSending}
+                  className="px-8 py-4 rounded-xl font-black text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transform hover:-translate-y-1 active:translate-y-0"
+                  style={{ 
+                    backgroundColor: popColor,
+                    boxShadow: input.trim() && !isSending 
+                      ? `0 10px 0 ${popColor}50, 0 10px 20px rgba(0,0,0,0.5)` 
+                      : 'none',
+                    borderBottom: `4px solid rgba(0,0,0,0.2)`
+                  }}
+                >
+                  {isSending ? (
+                    <Loader2 size={24} className="animate-spin" />
+                  ) : (
+                    <Send size={24} className="transform -rotate-12" />
+                  )}
+                  <span className="uppercase tracking-wider">Shoot!</span>
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Agent info badge - top left */}
-          <div className="absolute top-6 left-6 px-4 py-2 bg-black/60 backdrop-blur-md border border-white/20 rounded-xl">
-            <div className="text-xs text-white/50 uppercase tracking-wider">Role</div>
-            <div className="text-sm text-white font-semibold">{agent.role}</div>
-          </div>
+          {/* Top Info Bar */}
+          <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-start pointer-events-none">
+            {/* Agent Role Card */}
+            <div className="bg-black/80 backdrop-blur-md border border-white/10 p-4 rounded-br-2xl border-l-4 transform animate-slide-in-left"
+                 style={{ borderLeftColor: popColor }}>
+              <div className="text-xs text-white/50 uppercase tracking-widest mb-1 font-mono">Ultimate Talent</div>
+              <div className="text-lg text-white font-bold uppercase tracking-wide">{agent.role}</div>
+            </div>
 
-          {/* Chapter/Scene indicator - top right (before close button) */}
-          <div className="absolute top-6 right-20 px-4 py-2 bg-black/60 backdrop-blur-md border border-white/20 rounded-xl flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <div className="text-sm text-white font-semibold">LIVE CHAT</div>
+            {/* Scene Indicator */}
+            <div className="bg-black/80 backdrop-blur-md border border-white/10 px-6 py-2 rounded-bl-2xl flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse shadow-[0_0_10px_#ef4444]" />
+              <div className="text-sm text-white font-black tracking-widest">NONSTOP DEBATE</div>
+            </div>
           </div>
         </div>
       </div>
