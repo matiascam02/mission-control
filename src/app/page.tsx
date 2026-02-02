@@ -6,12 +6,10 @@ import { Header } from '@/components/Header';
 import { StatsCards } from '@/components/StatsCards';
 import { SquadStatus } from '@/components/SquadStatus';
 import { HealthMonitor } from '@/components/HealthMonitor';
-import { ActivityTimeline } from '@/components/ActivityTimeline';
 import { TaskBoard } from '@/components/TaskBoard';
-import { ActivityFeed } from '@/components/ActivityFeed';
 import { AgentDialogView } from '@/components/AgentDialogView';
 import { supabase, DbAgent, DbTask, DbActivity } from '@/lib/supabase';
-import { Menu, X, Activity, Sparkles } from 'lucide-react';
+import { Menu, Sparkles } from 'lucide-react';
 import { showAgentStatusToast } from '@/components/Toast';
 
 export default function Home() {
@@ -21,7 +19,6 @@ export default function Home() {
   const [activities, setActivities] = useState<DbActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [feedOpen, setFeedOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<DbAgent | null>(null);
 
   // Fetch initial data
@@ -156,15 +153,7 @@ export default function Home() {
             </div>
             <span className="font-bold text-white">Mission Control</span>
           </div>
-          <button 
-            onClick={() => setFeedOpen(true)}
-            className="p-2.5 hover:bg-white/5 rounded-xl transition-colors relative"
-          >
-            <Activity size={22} className="text-zinc-400" />
-            {activities.length > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-orange-400 rounded-full" />
-            )}
-          </button>
+          <div className="w-10" />
         </header>
 
         {/* Desktop Header */}
@@ -172,12 +161,8 @@ export default function Home() {
           <Header agents={agents} tasks={tasks} />
         </div>
         
-        {/* Content Grid */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Main Dashboard */}
-          <main className="flex-1 flex flex-col overflow-hidden">
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto">
+        {/* Main Content */}
+        <main className="flex-1 overflow-y-auto">
               <div className="p-4 lg:p-8">
                 {/* Section Header */}
                 <div className="mb-6">
@@ -191,10 +176,9 @@ export default function Home() {
                 {/* Squad Status with Animated Sprites */}
                 <SquadStatus agents={agents} onAgentClick={setSelectedAgent} />
 
-                {/* Monitoring Section */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                {/* Health Monitor - Full Width */}
+                <div className="mb-6">
                   <HealthMonitor agents={agents} onAgentClick={setSelectedAgent} />
-                  <ActivityTimeline activities={activities} agents={agents} limit={8} />
                 </div>
                 
                 {/* Task Board Section */}
@@ -208,39 +192,8 @@ export default function Home() {
                   <TaskBoard tasks={tasks} agents={agents} />
                 </div>
               </div>
-            </div>
-          </main>
-
-          {/* Activity Feed - Desktop */}
-          <aside className="hidden lg:block w-96 border-l border-white/5 bg-[#141414]/50">
-            <ActivityFeed activities={activities} agents={agents} />
-          </aside>
-        </div>
+        </main>
       </div>
-
-      {/* Mobile Feed Drawer */}
-      {feedOpen && (
-        <>
-          <div 
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
-            onClick={() => setFeedOpen(false)}
-          />
-          <div className="fixed inset-y-0 right-0 w-[85%] max-w-sm bg-[#141414] border-l border-white/5 z-50 lg:hidden animate-slide-in-right">
-            <div className="flex items-center justify-between p-4 border-b border-white/5">
-              <h2 className="font-semibold text-white">Live Feed</h2>
-              <button 
-                onClick={() => setFeedOpen(false)}
-                className="p-2 hover:bg-white/5 rounded-xl transition-colors"
-              >
-                <X size={20} className="text-zinc-400" />
-              </button>
-            </div>
-            <div className="h-[calc(100%-65px)]">
-              <ActivityFeed activities={activities} agents={agents} />
-            </div>
-          </div>
-        </>
-      )}
 
       {/* Agent Dialog (Danganronpa Style) */}
       {selectedAgent && (
