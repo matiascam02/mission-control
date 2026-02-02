@@ -13,23 +13,23 @@ export function StatsCards({ agents, tasks }: StatsCardsProps) {
   const inProgressTasks = tasks.filter(t => t.status === 'in_progress').length;
 
   return (
-    <div className="grid grid-cols-3 gap-4 mb-6">
-      <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
-        <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Active Agents</p>
-        <p className="text-3xl font-bold text-white">{activeAgents}</p>
-        <p className="text-xs text-gray-500 mt-1">{agents.length} total</p>
+    <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="card p-4">
+        <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Active</p>
+        <p className="text-2xl font-bold text-white">{activeAgents}</p>
+        <p className="text-xs text-zinc-600">{agents.length} agents</p>
       </div>
-      <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
-        <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Blocked</p>
-        <p className="text-3xl font-bold text-white">{blockedTasks}</p>
-        <p className={`text-xs mt-1 ${blockedTasks === 0 ? 'text-green-500' : 'text-red-500'}`}>
-          {blockedTasks === 0 ? 'None' : `${blockedTasks} need attention`}
+      <div className="card p-4">
+        <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Blocked</p>
+        <p className="text-2xl font-bold text-white">{blockedTasks}</p>
+        <p className={`text-xs ${blockedTasks === 0 ? 'text-emerald-500' : 'text-red-400'}`}>
+          {blockedTasks === 0 ? 'All clear' : 'Need attention'}
         </p>
       </div>
-      <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
-        <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">In Progress</p>
-        <p className="text-3xl font-bold text-white">{inProgressTasks}</p>
-        <p className="text-xs text-gray-500 mt-1">{tasks.length} total tasks</p>
+      <div className="card p-4">
+        <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">In Progress</p>
+        <p className="text-2xl font-bold text-white">{inProgressTasks}</p>
+        <p className="text-xs text-zinc-600">{tasks.length} total</p>
       </div>
     </div>
   );

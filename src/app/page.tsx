@@ -106,7 +106,7 @@ export default function Home() {
         transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0
         transition-transform duration-200 ease-in-out
       `}>
-        <Sidebar activeTab={activeTab} onTabChange={setActiveTab} agents={agents} />
+        <Sidebar activeTab={activeTab} onTabChange={setActiveTab} agents={agents} onClose={() => setSidebarOpen(false)} />
       </div>
       
       <div className="flex-1 flex flex-col overflow-hidden w-full">
