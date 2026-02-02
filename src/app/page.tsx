@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { Header } from '@/components/Header';
 import { StatsCards } from '@/components/StatsCards';
+import { SquadStatus } from '@/components/SquadStatus';
 import { TaskBoard } from '@/components/TaskBoard';
 import { ActivityFeed } from '@/components/ActivityFeed';
 import { AgentDialogView } from '@/components/AgentDialogView';
@@ -184,6 +185,9 @@ export default function Home() {
                 
                 {/* Stats */}
                 <StatsCards agents={agents} tasks={tasks} />
+
+                {/* Squad Status with Animated Sprites */}
+                <SquadStatus agents={agents} onAgentClick={setSelectedAgent} />
                 
                 {/* Task Board Section */}
                 <div className="mb-4">
