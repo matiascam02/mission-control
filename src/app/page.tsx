@@ -7,6 +7,7 @@ import { StatsCards } from '@/components/StatsCards';
 import { TaskBoard } from '@/components/TaskBoard';
 import { ActivityFeed } from '@/components/ActivityFeed';
 import { supabase, DbAgent, DbTask, DbActivity } from '@/lib/supabase';
+import { Menu, X } from 'lucide-react';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -14,6 +15,8 @@ export default function Home() {
   const [tasks, setTasks] = useState<DbTask[]>([]);
   const [activities, setActivities] = useState<DbActivity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [feedOpen, setFeedOpen] = useState(false);
 
   // Fetch initial data
   useEffect(() => {
@@ -88,26 +91,88 @@ export default function Home() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-950 text-white">
-      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} agents={agents} />
+    <div className="flex h-screen bg-gray-950 text-white overflow-hidden">
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
       
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header agents={agents} tasks={tasks} />
+      {/* Sidebar - hidden on mobile, shown on desktop */}
+      <div className={`
+        fixed lg:relative inset-y-0 left-0 z-50
+        transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0
+        transition-transform duration-200 ease-in-out
+      `}>
+        <Sidebar activeTab={activeTab} onTabChange={setActiveTab} agents={agents} />
+      </div>
+      
+      <div className="flex-1 flex flex-col overflow-hidden w-full">
+        {/* Mobile Header */}
+        <header className="h-14 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-4 lg:hidden">
+          <button 
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 hover:bg-gray-800 rounded-lg"
+          >
+            <Menu size={24} />
+          </button>
+          <h1 className="font-bold">Mission Control</h1>
+          <button 
+            onClick={() => setFeedOpen(true)}
+            className="p-2 hover:bg-gray-800 rounded-lg relative"
+          >
+            <span className="text-sm">Feed</span>
+            {activities.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full text-[10px] flex items-center justify-center">
+                {activities.length}
+              </span>
+            )}
+          </button>
+        </header>
+
+        {/* Desktop Header */}
+        <div className="hidden lg:block">
+          <Header agents={agents} tasks={tasks} />
+        </div>
         
         <div className="flex-1 flex overflow-hidden">
           {/* Main Content */}
-          <main className="flex-1 p-6 overflow-y-auto">
+          <main className="flex-1 p-4 lg:p-6 overflow-y-auto">
             <StatsCards agents={agents} tasks={tasks} />
             <h2 className="text-lg font-semibold text-white mb-4">Task Board</h2>
             <TaskBoard tasks={tasks} agents={agents} />
           </main>
 
-          {/* Activity Feed Sidebar */}
-          <aside className="w-80 border-l border-gray-800 p-4">
+          {/* Activity Feed - Desktop */}
+          <aside className="hidden lg:block w-80 border-l border-gray-800 p-4">
             <ActivityFeed activities={activities} agents={agents} />
           </aside>
         </div>
       </div>
+
+      {/* Mobile Feed Drawer */}
+      {feedOpen && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={() => setFeedOpen(false)}
+          />
+          <div className="fixed inset-y-0 right-0 w-80 max-w-full bg-gray-900 z-50 lg:hidden p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold">Live Feed</h2>
+              <button 
+                onClick={() => setFeedOpen(false)}
+                className="p-2 hover:bg-gray-800 rounded-lg"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <ActivityFeed activities={activities} agents={agents} />
+          </div>
+        </>
+      )}
     </div>
   );
 }
