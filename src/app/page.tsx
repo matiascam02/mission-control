@@ -6,9 +6,10 @@ import { Header } from '@/components/Header';
 import { StatsCards } from '@/components/StatsCards';
 import { TaskBoard } from '@/components/TaskBoard';
 import { ActivityFeed } from '@/components/ActivityFeed';
-import { AgentDetail } from '@/components/AgentDetail';
+import { AgentDialogView } from '@/components/AgentDialogView';
+import { IsometricWorld } from '@/components/IsometricWorld';
 import { supabase, DbAgent, DbTask, DbActivity } from '@/lib/supabase';
-import { Menu, X, Activity, Sparkles } from 'lucide-react';
+import { Menu, X, Activity, Sparkles, LayoutDashboard, Globe } from 'lucide-react';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -160,25 +161,68 @@ export default function Home() {
         {/* Content Grid */}
         <div className="flex-1 flex overflow-hidden">
           {/* Main Dashboard */}
-          <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
-            {/* Section Header */}
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-white mb-1">Dashboard</h1>
-              <p className="text-sm text-zinc-500">Monitor your squad&apos;s activity and task progress</p>
+          <main className="flex-1 flex flex-col overflow-hidden">
+            {/* Tab Navigation */}
+            <div className="flex gap-2 px-4 lg:px-8 pt-4 border-b border-white/5">
+              <button
+                onClick={() => setActiveTab('dashboard')}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-t-xl transition-all ${
+                  activeTab === 'dashboard'
+                    ? 'bg-white/5 text-white border-b-2 border-orange-500'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <LayoutDashboard size={18} />
+                <span className="font-medium">Dashboard</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('world')}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-t-xl transition-all ${
+                  activeTab === 'world'
+                    ? 'bg-white/5 text-white border-b-2 border-orange-500'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Globe size={18} />
+                <span className="font-medium">World</span>
+              </button>
             </div>
-            
-            {/* Stats */}
-            <StatsCards agents={agents} tasks={tasks} />
-            
-            {/* Task Board Section */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h2 className="text-lg font-semibold text-white">Task Board</h2>
-                  <p className="text-xs text-zinc-500 mt-0.5">Tasks assigned to agents</p>
+
+            {/* Tab Content */}
+            <div className="flex-1 overflow-y-auto">
+              {activeTab === 'dashboard' && (
+                <div className="p-4 lg:p-8">
+                  {/* Section Header */}
+                  <div className="mb-6">
+                    <h1 className="text-2xl font-bold text-white mb-1">Dashboard</h1>
+                    <p className="text-sm text-zinc-500">Monitor your squad&apos;s activity and task progress</p>
+                  </div>
+                  
+                  {/* Stats */}
+                  <StatsCards agents={agents} tasks={tasks} />
+                  
+                  {/* Task Board Section */}
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h2 className="text-lg font-semibold text-white">Task Board</h2>
+                        <p className="text-xs text-zinc-500 mt-0.5">Tasks assigned to agents</p>
+                      </div>
+                    </div>
+                    <TaskBoard tasks={tasks} agents={agents} />
+                  </div>
                 </div>
-              </div>
-              <TaskBoard tasks={tasks} agents={agents} />
+              )}
+
+              {activeTab === 'world' && (
+                <div className="p-4 lg:p-8 h-full">
+                  <IsometricWorld 
+                    agents={agents} 
+                    width={window.innerWidth > 1024 ? 1200 : 800}
+                    height={window.innerHeight > 768 ? 700 : 500}
+                  />
+                </div>
+              )}
             </div>
           </main>
 
@@ -213,11 +257,10 @@ export default function Home() {
         </>
       )}
 
-      {/* Agent Detail Modal */}
+      {/* Agent Dialog (Danganronpa Style) */}
       {selectedAgent && (
-        <AgentDetail
+        <AgentDialogView
           agent={selectedAgent}
-          activities={activities}
           onClose={() => setSelectedAgent(null)}
         />
       )}
