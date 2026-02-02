@@ -17,18 +17,40 @@ interface Message {
   timestamp: Date;
 }
 
+// Unique greetings based on anime personalities
+const AGENT_GREETINGS: Record<string, string> = {
+  'franky': "SUUUPER! I'm Franky, the shipwright! Need something built? I'm your cyborg! 🤖⭐",
+  'reigen': "Ah, welcome! I'm Reigen, your strategic consultant. Let me show you the path to success... for a reasonable fee. 😏✨",
+  'robin': "Fufufu~ I'm Robin. I find history and research fascinating. What mystery shall we uncover today? 📚🌸",
+  'nanami': "I'm Nanami. Let's keep this professional and efficient. Time is money, after all. ⏰💼",
+  'frieren': "...Oh, hello. I'm Frieren. I've been documenting things for about a thousand years. What do you need? ❄️📜",
+  'maomao': "Hmm? I'm Maomao. If it's poison or code bugs you're worried about, I'll analyze it thoroughly. 🧪🔍",
+  'rimuru': "Yo! Rimuru here! I used to be a slime, now I design interfaces. Life's weird like that! 🔵✨",
+  'hoyuelo': "¡Hola! Soy Hoyuelo, el espíritu que todo lo ve. ¿En qué puedo ayudarte? 😊👻",
+};
+
+function getAgentGreeting(agentId: string, agentName: string): string {
+  return AGENT_GREETINGS[agentId.toLowerCase()] || `Hey! I'm ${agentName}. What's up?`;
+}
+
 export function AgentDialogView({ agent, onClose }: AgentDialogViewProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '0',
-      role: 'agent',
-      content: `Hey! I'm ${agent.name}. What's up?`,
-      timestamp: new Date(),
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isSending, setIsSending] = useState(false);
+
+  // Reset messages when agent changes
+  useEffect(() => {
+    setMessages([
+      {
+        id: '0',
+        role: 'agent',
+        content: getAgentGreeting(agent.id, agent.name),
+        timestamp: new Date(),
+      }
+    ]);
+    setCurrentMessageIndex(0);
+  }, [agent.id, agent.name]);
   const [displayedText, setDisplayedText] = useState('');
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -96,14 +118,32 @@ export function AgentDialogView({ agent, onClose }: AgentDialogViewProps) {
     setCurrentMessageIndex(messages.length); // Jump to user message
 
     try {
-      // TODO: Integrate with sessions_send API
-      // For now, mock response
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Call the agent chat API
+      const response = await fetch('/api/agent-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agentId: agent.id,
+          message: input.trim(),
+        }),
+      });
+
+      const data = await response.json();
+      
+      let responseContent: string;
+      if (!response.ok) {
+        // Handle API errors gracefully
+        responseContent = data.error === 'Gateway not configured' 
+          ? "⚠️ The gateway isn't configured yet. Ask Matias to set OPENCLAW_GATEWAY_URL and OPENCLAW_GATEWAY_TOKEN in Railway."
+          : `⚠️ Couldn't reach the agent: ${data.error || 'Unknown error'}`;
+      } else {
+        responseContent = data.response;
+      }
       
       const agentResponse: Message = {
         id: (Date.now() + 1).toString(),
         role: 'agent',
-        content: `I hear you! That's interesting. Let me think about that...`,
+        content: responseContent,
         timestamp: new Date(),
       };
 
@@ -111,6 +151,15 @@ export function AgentDialogView({ agent, onClose }: AgentDialogViewProps) {
       setCurrentMessageIndex(prev => prev + 1);
     } catch (error) {
       console.error('Failed to send message:', error);
+      // Show error in chat
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'agent',
+        content: `⚠️ Network error: couldn't connect to the server. Try again?`,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
+      setCurrentMessageIndex(prev => prev + 1);
     } finally {
       setIsSending(false);
     }
