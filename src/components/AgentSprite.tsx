@@ -20,11 +20,11 @@ interface AgentSpriteProps {
 // Sprite configurations for each agent
 const SPRITE_CONFIGS: Record<string, Record<string, SpriteConfig>> = {
   hoyuelo: {
-    idle: { src: '/sprites/hoyuelo-v2/idle.png', frames: 4, cols: 2, rows: 2, fps: 6 },
-    working: { src: '/sprites/hoyuelo-v2/working.png', frames: 4, cols: 2, rows: 2, fps: 8 },
-    walk: { src: '/sprites/hoyuelo-v2/walk.png', frames: 4, cols: 2, rows: 2, fps: 10 },
-    done: { src: '/sprites/hoyuelo-v2/idle.png', frames: 4, cols: 2, rows: 2, fps: 4 },
-    blocked: { src: '/sprites/hoyuelo-v2/idle.png', frames: 4, cols: 2, rows: 2, fps: 2 },
+    idle: { src: '/sprites/hoyuelo/idle.png', frames: 1, cols: 1, rows: 1, fps: 1 },
+    working: { src: '/sprites/hoyuelo/attack.png', frames: 1, cols: 1, rows: 1, fps: 1 },
+    walk: { src: '/sprites/hoyuelo/walk.png', frames: 1, cols: 1, rows: 1, fps: 1 },
+    done: { src: '/sprites/hoyuelo/jump.png', frames: 1, cols: 1, rows: 1, fps: 1 },
+    blocked: { src: '/sprites/hoyuelo/idle.png', frames: 1, cols: 1, rows: 1, fps: 1 },
   },
 };
 
