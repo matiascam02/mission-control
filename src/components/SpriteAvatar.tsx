@@ -10,7 +10,9 @@ interface SpriteAvatarProps {
   status?: 'idle' | 'working' | 'done' | 'blocked';
   /** Size of the sprite (1 = 64px, 2 = 128px, etc.) */
   scale?: number;
-  /** Fallback emoji if no sprite available */
+  /** Static avatar image URL (used when no sprite animation available) */
+  avatarUrl?: string;
+  /** Fallback emoji if no sprite or avatar available */
   fallbackEmoji?: string;
   /** Fallback color for emoji background */
   fallbackColor?: string;
@@ -22,7 +24,7 @@ interface SpriteAvatarProps {
 
 /**
  * SpriteAvatar - Shows animated sprite for agents that have one,
- * falls back to emoji avatar for agents without sprites.
+ * falls back to static avatar image, then emoji if neither available.
  * 
  * Usage:
  * ```tsx
@@ -30,6 +32,7 @@ interface SpriteAvatarProps {
  *   agentName="hoyuelo"
  *   status={agent.status}
  *   scale={1.5}
+ *   avatarUrl="/avatars/hoyuelo.png"
  *   fallbackEmoji="👻"
  *   fallbackColor="#4ADE80"
  * />
@@ -39,6 +42,7 @@ export function SpriteAvatar({
   agentName,
   status = 'idle',
   scale = 1,
+  avatarUrl,
   fallbackEmoji = '🤖',
   fallbackColor = '#f97316',
   className = '',
@@ -88,7 +92,43 @@ export function SpriteAvatar({
     );
   }
 
-  // Fallback to emoji avatar
+  // Fallback to static avatar image if available
+  if (avatarUrl) {
+    return (
+      <div 
+        className={`relative ${className}`}
+        style={{
+          width: size,
+          height: size,
+        }}
+      >
+        {/* Glow effect */}
+        {glowActive && (
+          <div 
+            className="absolute inset-0 rounded-2xl animate-pulse opacity-50"
+            style={{
+              background: `radial-gradient(circle, ${fallbackColor}40 0%, transparent 70%)`,
+              filter: 'blur(8px)',
+            }}
+          />
+        )}
+        
+        {/* Static avatar image */}
+        <img
+          src={avatarUrl}
+          alt={agentName}
+          className="relative z-10 rounded-2xl object-cover transition-all"
+          style={{
+            width: size,
+            height: size,
+            boxShadow: glowActive ? `0 4px 24px ${fallbackColor}40` : 'none',
+          }}
+        />
+      </div>
+    );
+  }
+
+  // Final fallback to emoji avatar
   return (
     <div
       className={`flex items-center justify-center rounded-2xl transition-all ${className}`}
