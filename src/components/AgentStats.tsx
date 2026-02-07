@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useState } from 'react';
 
 interface AgentStat {
-  agent_id: string;
+  agent_name: string;
   xp: number;
   level: number;
   tasks_completed: number;
@@ -12,15 +11,14 @@ interface AgentStat {
   best_streak: number;
   mood: 'happy' | 'working' | 'idle' | 'sleeping' | 'frustrated';
   achievements: string[];
-  last_active_at: string;
 }
 
 const MOOD_EMOJI: Record<string, string> = {
-  happy: '😊',
-  working: '💪',
-  idle: '😐',
-  sleeping: '😴',
-  frustrated: '😤',
+  happy: '\u{1F60A}',
+  working: '\u{1F4AA}',
+  idle: '\u{1F610}',
+  sleeping: '\u{1F634}',
+  frustrated: '\u{1F624}',
 };
 
 const MOOD_COLORS: Record<string, string> = {
@@ -32,7 +30,6 @@ const MOOD_COLORS: Record<string, string> = {
 };
 
 function xpForNextLevel(level: number): number {
-  // XP needed for level N: 10 * (N-1)^2
   return 10 * Math.pow(level, 2);
 }
 
@@ -43,55 +40,22 @@ function xpProgress(xp: number, level: number): number {
   return Math.min(100, Math.max(0, progress));
 }
 
+// Placeholder stats until agent_stats table is added to Convex
+function getDefaultStats(agentName: string): AgentStat {
+  return {
+    agent_name: agentName,
+    xp: 0,
+    level: 1,
+    tasks_completed: 0,
+    current_streak: 0,
+    best_streak: 0,
+    mood: 'idle',
+    achievements: [],
+  };
+}
+
 export function AgentStatsCard({ agentId }: { agentId: string }) {
-  const [stats, setStats] = useState<AgentStat | null>(null);
-
-  useEffect(() => {
-    // Initial fetch
-    fetchStats();
-
-    // Real-time subscription
-    const channel = supabase
-      .channel(`agent_stats_${agentId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'agent_stats',
-          filter: `agent_id=eq.${agentId}`,
-        },
-        (payload) => {
-          if (payload.new) {
-            setStats(payload.new as AgentStat);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [agentId]);
-
-  async function fetchStats() {
-    const { data } = await supabase
-      .from('agent_stats')
-      .select('*')
-      .eq('agent_id', agentId)
-      .single();
-    
-    if (data) setStats(data);
-  }
-
-  if (!stats) {
-    return (
-      <div className="bg-gray-800 rounded-lg p-4 animate-pulse">
-        <div className="h-4 bg-gray-700 rounded w-1/2 mb-2"></div>
-        <div className="h-2 bg-gray-700 rounded w-full"></div>
-      </div>
-    );
-  }
+  const [stats] = useState<AgentStat>(() => getDefaultStats(agentId));
 
   const progress = xpProgress(stats.xp, stats.level);
 
@@ -116,7 +80,7 @@ export function AgentStatsCard({ agentId }: { agentId: string }) {
           <span className="text-gray-400">{stats.xp} XP</span>
         </div>
         <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-          <div 
+          <div
             className="h-full bg-gradient-to-r from-yellow-500 to-yellow-300 transition-all duration-500"
             style={{ width: `${progress}%` }}
           ></div>
@@ -133,7 +97,7 @@ export function AgentStatsCard({ agentId }: { agentId: string }) {
           <div className="text-xs text-gray-400">Tasks</div>
         </div>
         <div className="bg-gray-700/50 rounded p-2">
-          <div className="text-lg font-bold text-orange-400">{stats.current_streak}🔥</div>
+          <div className="text-lg font-bold text-orange-400">{stats.current_streak}</div>
           <div className="text-xs text-gray-400">Streak</div>
         </div>
         <div className="bg-gray-700/50 rounded p-2">

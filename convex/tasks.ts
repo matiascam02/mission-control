@@ -1,13 +1,28 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 
-// Query: Get all tasks
+// Query: Get all tasks with their assignees
 export const list = query({
   handler: async (ctx) => {
-    return await ctx.db
+    const tasks = await ctx.db
       .query("tasks")
       .order("desc")
       .collect();
+
+    return await Promise.all(
+      tasks.map(async (task) => {
+        const assigneeLinks = await ctx.db
+          .query("task_assignees")
+          .withIndex("by_task", (q) => q.eq("task_id", task._id))
+          .collect();
+
+        const assignees = (
+          await Promise.all(assigneeLinks.map((a) => ctx.db.get(a.agent_id)))
+        ).filter((a) => a !== null);
+
+        return { ...task, assignees };
+      })
+    );
   },
 });
 
@@ -43,6 +58,41 @@ export const byStatus = query({
       .query("tasks")
       .withIndex("by_status", (q) => q.eq("status", status as any))
       .collect();
+  },
+});
+
+// Internal mutation: Update task status from HTTP action
+export const updateStatusInternal = internalMutation({
+  args: {
+    taskId: v.id("tasks"),
+    agentId: v.id("agents"),
+    status: v.union(
+      v.literal("inbox"),
+      v.literal("assigned"),
+      v.literal("in_progress"),
+      v.literal("review"),
+      v.literal("done"),
+      v.literal("blocked")
+    ),
+  },
+  handler: async (ctx, { taskId, agentId, status }) => {
+    const task = await ctx.db.get(taskId);
+    if (!task) throw new Error("Task not found");
+
+    const agent = await ctx.db.get(agentId);
+    if (!agent) throw new Error("Agent not found");
+
+    const previousStatus = task.status;
+    await ctx.db.patch(taskId, { status });
+
+    await ctx.db.insert("activities", {
+      type: "status_change",
+      task_id: taskId,
+      agent_id: agentId,
+      title: `Task moved to ${status}`,
+      message: `${agent.name} changed "${task.title}" to ${status}`,
+      metadata: { previous_status: previousStatus, new_status: status },
+    });
   },
 });
 

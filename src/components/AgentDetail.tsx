@@ -1,22 +1,21 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { DbAgent, DbActivity, supabase } from '@/lib/supabase';
+import { ConvexAgent, ConvexActivity } from '@/lib/convex-types';
 import { X, Send, Zap, MessageCircle } from 'lucide-react';
 import Image from 'next/image';
 import { AgentSprite, hasSprite } from './AgentSprite';
 
 interface ChatMessage {
   id: string;
-  agent_id: string;
   role: 'user' | 'agent';
   content: string;
-  created_at: string;
+  timestamp: Date;
 }
 
 interface AgentDetailProps {
-  agent: DbAgent;
-  activities: DbActivity[];
+  agent: ConvexAgent;
+  activities: ConvexActivity[];
   onClose: () => void;
 }
 
@@ -55,53 +54,12 @@ export function AgentDetail({ agent, activities, onClose }: AgentDetailProps) {
   const [message, setMessage] = useState('');
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [sending, setSending] = useState(false);
-  const [loading, setLoading] = useState(true);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  const skills = agentSkills[agent.id] || [];
-  const quote = agentQuotes[agent.id] || '"Ready to assist."';
+  const spriteKey = agent.name.toLowerCase();
+  const skills = agentSkills[spriteKey] || [];
+  const quote = agentQuotes[spriteKey] || '"Ready to assist."';
   const status = statusConfig[agent.status] || statusConfig.idle;
-
-  // Load chat history
-  useEffect(() => {
-    async function loadMessages() {
-      try {
-        const res = await fetch(`/api/chat?agent_id=${agent.id}&limit=50`);
-        const data = await res.json();
-        if (data.messages) {
-          setChatHistory(data.messages);
-        }
-      } catch (error) {
-        console.error('Failed to load messages:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadMessages();
-  }, [agent.id]);
-
-  // Subscribe to new messages
-  useEffect(() => {
-    const channel = supabase
-      .channel(`chat-${agent.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'chat_messages',
-          filter: `agent_id=eq.${agent.id}`,
-        },
-        (payload) => {
-          setChatHistory((prev) => [...prev, payload.new as ChatMessage]);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [agent.id]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -114,15 +72,37 @@ export function AgentDetail({ agent, activities, onClose }: AgentDetailProps) {
     setMessage('');
     setSending(true);
 
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: userMsg,
+      timestamp: new Date(),
+    };
+    setChatHistory(prev => [...prev, userMessage]);
+
     try {
-      const res = await fetch('/api/chat', {
+      const res = await fetch('/api/agent-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ agent_id: agent.id, content: userMsg }),
+        body: JSON.stringify({ agentId: agent._id, message: userMsg }),
       });
-      if (!res.ok) throw new Error('Failed to send');
+      const data = await res.json();
+
+      const agentResponse: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'agent',
+        content: res.ok ? data.response : `Could not reach agent: ${data.error || 'Unknown error'}`,
+        timestamp: new Date(),
+      };
+      setChatHistory(prev => [...prev, agentResponse]);
     } catch (error) {
       console.error('Failed to send:', error);
+      setChatHistory(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        role: 'agent',
+        content: 'Network error: could not connect to the server.',
+        timestamp: new Date(),
+      }]);
     } finally {
       setSending(false);
     }
@@ -135,7 +115,7 @@ export function AgentDetail({ agent, activities, onClose }: AgentDetailProps) {
 
       {/* RPG-style Character Card */}
       <div className="relative w-full max-w-md bg-gradient-to-b from-[#1a1a24] to-[#0f0f14] border border-white/10 rounded-2xl overflow-hidden shadow-2xl animate-scale-in">
-        
+
         {/* Close button */}
         <button
           onClick={onClose}
@@ -149,18 +129,18 @@ export function AgentDetail({ agent, activities, onClose }: AgentDetailProps) {
           <div className="flex items-start gap-4">
             {/* Avatar Frame - Large sprite or image */}
             <div className="relative flex-shrink-0">
-              <div 
+              <div
                 className={`w-28 h-28 rounded-xl overflow-hidden border-2 ${status.glow} flex items-center justify-center`}
-                style={{ 
+                style={{
                   borderColor: agent.color || '#3b82f6',
-                  backgroundColor: hasSprite(agent.id) ? 'transparent' : (agent.color || '#3b82f6') + '20'
+                  backgroundColor: hasSprite(spriteKey) ? 'transparent' : (agent.color || '#3b82f6') + '20'
                 }}
               >
-                {hasSprite(agent.id) ? (
-                  <AgentSprite 
-                    agentId={agent.id} 
-                    status={agent.status as any} 
-                    size={112} 
+                {hasSprite(spriteKey) ? (
+                  <AgentSprite
+                    agentId={spriteKey}
+                    status={agent.status as any}
+                    size={112}
                   />
                 ) : agent.avatar_url ? (
                   <Image
@@ -189,15 +169,15 @@ export function AgentDetail({ agent, activities, onClose }: AgentDetailProps) {
               </div>
               <p className="text-xs text-zinc-500 mb-2">{agent.role}</p>
               <p className="text-[11px] text-zinc-600 italic">{agent.anime}</p>
-              
+
               {/* Level Badge */}
               <div className="mt-2">
                 <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${
-                  agent.level === 'LEAD' 
-                    ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' 
+                  agent.level === 'LEAD'
+                    ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
                     : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
                 }`}>
-                  {agent.level === 'LEAD' ? '⭐ LEAD' : `LVL ${agent.level}`}
+                  {agent.level === 'LEAD' ? 'LEAD' : `LVL ${agent.level}`}
                 </span>
               </div>
             </div>
@@ -252,9 +232,7 @@ export function AgentDetail({ agent, activities, onClose }: AgentDetailProps) {
 
           {/* Messages */}
           <div className="h-36 overflow-y-auto rounded-xl bg-black/30 p-3 mb-3 space-y-2">
-            {loading ? (
-              <div className="flex items-center justify-center h-full text-zinc-600 text-sm">Loading...</div>
-            ) : chatHistory.length === 0 ? (
+            {chatHistory.length === 0 ? (
               <div className="flex items-center justify-center h-full text-zinc-600 text-sm">
                 Say hello to {agent.name}!
               </div>

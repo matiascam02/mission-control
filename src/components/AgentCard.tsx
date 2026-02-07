@@ -1,42 +1,42 @@
 'use client';
 
-import { DbAgent } from '@/lib/supabase';
+import { ConvexAgent } from '@/lib/convex-types';
 import { Activity, Zap, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { AgentSprite, hasSprite } from './AgentSprite';
 
 interface AgentCardProps {
-  agent: DbAgent;
+  agent: ConvexAgent;
   compact?: boolean;
   onClick?: () => void;
 }
 
-const statusConfig: Record<string, { 
-  class: string; 
-  label: string; 
+const statusConfig: Record<string, {
+  class: string;
+  label: string;
   icon: typeof Activity;
   bg: string;
 }> = {
-  idle: { 
-    class: 'status-idle', 
-    label: 'Idle', 
+  idle: {
+    class: 'status-idle',
+    label: 'Idle',
     icon: Activity,
     bg: 'bg-zinc-500/10'
   },
-  working: { 
-    class: 'status-working', 
-    label: 'Working', 
+  working: {
+    class: 'status-working',
+    label: 'Working',
     icon: Zap,
     bg: 'bg-emerald-500/10'
   },
-  done: { 
-    class: 'status-done', 
-    label: 'Done', 
+  done: {
+    class: 'status-done',
+    label: 'Done',
     icon: CheckCircle2,
     bg: 'bg-blue-500/10'
   },
-  blocked: { 
-    class: 'status-blocked', 
-    label: 'Blocked', 
+  blocked: {
+    class: 'status-blocked',
+    label: 'Blocked',
     icon: AlertCircle,
     bg: 'bg-red-500/10'
   },
@@ -53,33 +53,34 @@ export function AgentCard({ agent, compact = false, onClick }: AgentCardProps) {
   const status = statusConfig[agent.status] || statusConfig.idle;
   const level = levelConfig[agent.level] || levelConfig.INT;
   const StatusIcon = status.icon;
-  
+  const spriteKey = agent.name.toLowerCase();
+
   if (compact) {
     return (
-      <div 
+      <div
         className="sidebar-item group flex items-center gap-3 p-2.5 cursor-pointer"
         onClick={onClick}
       >
         {/* Avatar with status */}
         <div className="relative flex-shrink-0">
-          <div 
+          <div
             className="w-9 h-9 rounded-xl flex items-center justify-center text-lg transition-transform group-hover:scale-105 overflow-hidden"
-            style={{ 
+            style={{
               backgroundColor: color + '15',
               boxShadow: agent.status === 'working' ? `0 0 20px ${color}30` : 'none'
             }}
           >
-            {hasSprite(agent.id) ? (
-              <AgentSprite agentId={agent.id} status={agent.status as any} size={36} />
+            {hasSprite(spriteKey) ? (
+              <AgentSprite agentId={spriteKey} status={agent.status as any} size={36} />
             ) : (
               agent.emoji || '🤖'
             )}
           </div>
-          <div 
+          <div
             className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#141414] ${status.class}`}
           />
         </div>
-        
+
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -92,7 +93,7 @@ export function AgentCard({ agent, compact = false, onClick }: AgentCardProps) {
           </div>
           <p className="text-xs text-zinc-500 truncate">{agent.role}</p>
         </div>
-        
+
         {/* Status indicator on hover */}
         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
           <StatusIcon size={14} className="text-zinc-500" />
@@ -102,9 +103,9 @@ export function AgentCard({ agent, compact = false, onClick }: AgentCardProps) {
   }
 
   return (
-    <div 
+    <div
       className="card p-5 animate-fade-in-up group cursor-pointer"
-      style={{ 
+      style={{
         animationDelay: `${Math.random() * 0.2}s`,
         borderColor: agent.status === 'working' ? color + '30' : undefined
       }}
@@ -114,24 +115,24 @@ export function AgentCard({ agent, compact = false, onClick }: AgentCardProps) {
       <div className="flex items-start gap-4">
         {/* Avatar */}
         <div className="relative">
-          <div 
+          <div
             className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-all duration-300 group-hover:scale-105 overflow-hidden"
-            style={{ 
+            style={{
               backgroundColor: color + '15',
               boxShadow: agent.status === 'working' ? `0 4px 24px ${color}40` : 'none'
             }}
           >
-            {hasSprite(agent.id) ? (
-              <AgentSprite agentId={agent.id} status={agent.status as any} size={56} />
+            {hasSprite(spriteKey) ? (
+              <AgentSprite agentId={spriteKey} status={agent.status as any} size={56} />
             ) : (
               agent.emoji || '🤖'
             )}
           </div>
-          <div 
+          <div
             className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-[3px] border-[#1a1a1a] ${status.class}`}
           />
         </div>
-        
+
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
@@ -144,7 +145,7 @@ export function AgentCard({ agent, compact = false, onClick }: AgentCardProps) {
           <p className="text-xs text-zinc-600 mt-0.5 italic">{agent.anime}</p>
         </div>
       </div>
-      
+
       {/* Status Bar */}
       <div className={`mt-4 px-3 py-2 rounded-xl flex items-center gap-2 ${status.bg} transition-colors`}>
         <StatusIcon size={14} className="text-zinc-400" />
@@ -158,7 +159,7 @@ export function AgentCard({ agent, compact = false, onClick }: AgentCardProps) {
           </div>
         )}
       </div>
-      
+
       {/* Current Task */}
       {agent.current_task && (
         <div className="mt-3 p-4 bg-gradient-to-br from-white/[0.04] to-transparent rounded-xl border border-white/5">

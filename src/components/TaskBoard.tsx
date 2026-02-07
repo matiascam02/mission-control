@@ -1,13 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { DbTask, DbAgent, supabase } from '@/lib/supabase';
-import { 
-  AlertCircle, 
-  Inbox, 
-  Loader2, 
-  Eye, 
-  CheckCircle2, 
+import { useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
+import { ConvexTask, ConvexAgent } from '@/lib/convex-types';
+import {
+  AlertCircle,
+  Inbox,
+  Loader2,
+  Eye,
+  CheckCircle2,
   MoreHorizontal,
   Tag,
   Clock,
@@ -16,13 +18,13 @@ import {
 import { showToast } from './Toast';
 
 interface TaskBoardProps {
-  tasks: DbTask[];
-  agents: DbAgent[];
+  tasks: ConvexTask[];
+  agents: ConvexAgent[];
 }
 
-const columns: { 
-  id: DbTask['status']; 
-  label: string; 
+const columns: {
+  id: ConvexTask['status'];
+  label: string;
   icon: typeof AlertCircle;
   color: string;
   dotColor: string;
@@ -42,12 +44,12 @@ const tagColors: Record<string, string> = {
   default: 'bg-white/10 text-zinc-400 border-white/10',
 };
 
-function formatTaskDate(dateStr: string): string {
-  const date = new Date(dateStr);
+function formatTaskDate(creationTime: number): string {
+  const date = new Date(creationTime);
   const now = new Date();
   const diff = now.getTime() - date.getTime();
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  
+
   if (days === 0) return 'Today';
   if (days === 1) return 'Yesterday';
   if (days < 7) return `${days}d ago`;
@@ -55,19 +57,19 @@ function formatTaskDate(dateStr: string): string {
 }
 
 interface TaskCardProps {
-  task: DbTask;
+  task: ConvexTask;
   index: number;
-  onDragStart: (task: DbTask) => void;
+  onDragStart: (task: ConvexTask) => void;
   isDragging: boolean;
 }
 
 function TaskCard({ task, index, onDragStart, isDragging }: TaskCardProps) {
   return (
-    <div 
+    <div
       draggable
       onDragStart={(e) => {
         e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', task.id);
+        e.dataTransfer.setData('text/plain', task._id);
         onDragStart(task);
       }}
       className={`card p-4 cursor-grab active:cursor-grabbing group animate-fade-in-up transition-all
@@ -87,7 +89,7 @@ function TaskCard({ task, index, onDragStart, isDragging }: TaskCardProps) {
           <MoreHorizontal size={14} className="text-zinc-500" />
         </button>
       </div>
-      
+
       {/* Tags */}
       {task.tags && task.tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-3">
@@ -109,23 +111,23 @@ function TaskCard({ task, index, onDragStart, isDragging }: TaskCardProps) {
           )}
         </div>
       )}
-      
+
       {/* Description */}
       {task.description && (
         <p className="text-xs text-zinc-500 line-clamp-2 mb-3 leading-relaxed">
           {task.description}
         </p>
       )}
-      
+
       {/* Footer */}
       <div className="flex items-center justify-between pt-2 border-t border-white/5">
         <div className="flex items-center gap-1.5 text-zinc-600">
           <Clock size={12} />
-          <span className="text-[10px] font-medium">{formatTaskDate(task.created_at)}</span>
+          <span className="text-[10px] font-medium">{formatTaskDate(task._creationTime)}</span>
         </div>
         {task.priority && (
           <span className={`text-[10px] font-semibold uppercase tracking-wider ${
-            task.priority === 'high' ? 'text-red-400' :
+            task.priority === 'high' || task.priority === 'urgent' ? 'text-red-400' :
             task.priority === 'medium' ? 'text-amber-400' :
             'text-zinc-500'
           }`}>
@@ -138,26 +140,23 @@ function TaskCard({ task, index, onDragStart, isDragging }: TaskCardProps) {
 }
 
 export function TaskBoard({ tasks }: TaskBoardProps) {
-  const [draggingTask, setDraggingTask] = useState<DbTask | null>(null);
+  const [draggingTask, setDraggingTask] = useState<ConvexTask | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
 
-  const handleDrop = async (columnId: DbTask['status']) => {
+  const updateTaskStatus = useMutation(api.tasks.updateStatus);
+
+  const handleDrop = async (columnId: ConvexTask['status']) => {
     if (!draggingTask || draggingTask.status === columnId) {
       setDraggingTask(null);
       setDragOverColumn(null);
       return;
     }
 
-    const oldStatus = draggingTask.status;
-    
     try {
-      // Optimistic update - will be synced by real-time subscription
-      const { error } = await supabase
-        .from('tasks')
-        .update({ status: columnId, updated_at: new Date().toISOString() })
-        .eq('id', draggingTask.id);
-
-      if (error) throw error;
+      await updateTaskStatus({
+        id: draggingTask._id,
+        status: columnId,
+      });
 
       showToast({
         type: 'success',
@@ -165,19 +164,6 @@ export function TaskBoard({ tasks }: TaskBoardProps) {
         message: `"${draggingTask.title.slice(0, 30)}${draggingTask.title.length > 30 ? '...' : ''}" → ${columns.find(c => c.id === columnId)?.label}`,
         duration: 3000,
       });
-
-      // Log activity
-      await supabase.from('activities').insert({
-        type: 'task_moved',
-        title: `Task moved to ${columnId}`,
-        description: `"${draggingTask.title}" moved from ${oldStatus} to ${columnId}`,
-        metadata: { 
-          task_id: draggingTask.id, 
-          from: oldStatus, 
-          to: columnId 
-        },
-      });
-
     } catch (error) {
       console.error('Failed to update task:', error);
       showToast({
@@ -197,10 +183,10 @@ export function TaskBoard({ tasks }: TaskBoardProps) {
         const columnTasks = tasks.filter((t) => t.status === column.id);
         const Icon = column.icon;
         const isOver = dragOverColumn === column.id;
-        
+
         return (
-          <div 
-            key={column.id} 
+          <div
+            key={column.id}
             className="flex-shrink-0 w-72 animate-fade-in-up"
             style={{ animationDelay: `${colIndex * 0.1}s` }}
             onDragOver={(e) => {
@@ -230,21 +216,21 @@ export function TaskBoard({ tasks }: TaskBoardProps) {
                 {columnTasks.length}
               </span>
             </div>
-            
+
             {/* Column Content */}
             <div className={`task-column p-2 min-h-[200px] transition-all rounded-xl ${
-              isOver 
-                ? 'bg-orange-500/10 border-2 border-dashed border-orange-500/40' 
+              isOver
+                ? 'bg-orange-500/10 border-2 border-dashed border-orange-500/40'
                 : 'border-2 border-transparent'
             }`}>
               <div className="space-y-2">
                 {columnTasks.map((task, index) => (
-                  <TaskCard 
-                    key={task.id} 
-                    task={task} 
+                  <TaskCard
+                    key={task._id}
+                    task={task}
                     index={index}
                     onDragStart={setDraggingTask}
-                    isDragging={draggingTask?.id === task.id}
+                    isDragging={draggingTask?._id === task._id}
                   />
                 ))}
                 {columnTasks.length === 0 && (

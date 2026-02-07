@@ -1,11 +1,11 @@
 'use client';
 
-import { DbAgent, DbTask } from '@/lib/supabase';
+import { ConvexAgent, ConvexTask } from '@/lib/convex-types';
 import { Users, AlertCircle, Zap, TrendingUp, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 interface StatsCardsProps {
-  agents: DbAgent[];
-  tasks: DbTask[];
+  agents: ConvexAgent[];
+  tasks: ConvexTask[];
 }
 
 interface StatCardProps {
@@ -22,7 +22,7 @@ interface StatCardProps {
 
 function StatCard({ label, value, subtext, icon: Icon, iconColor, iconBg, trend, trendValue, highlight }: StatCardProps) {
   return (
-    <div 
+    <div
       className={`card p-5 animate-fade-in-up ${
         highlight ? 'border-red-500/30 bg-gradient-to-br from-red-500/5 to-transparent' : ''
       }`}
@@ -33,8 +33,8 @@ function StatCard({ label, value, subtext, icon: Icon, iconColor, iconBg, trend,
         </div>
         {trend && trendValue && (
           <div className={`flex items-center gap-1 px-2 py-1 rounded-lg ${
-            trend === 'up' ? 'bg-emerald-500/10 text-emerald-400' : 
-            trend === 'down' ? 'bg-red-500/10 text-red-400' : 
+            trend === 'up' ? 'bg-emerald-500/10 text-emerald-400' :
+            trend === 'down' ? 'bg-red-500/10 text-red-400' :
             'bg-zinc-500/10 text-zinc-400'
           }`}>
             {trend === 'up' ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
@@ -42,7 +42,7 @@ function StatCard({ label, value, subtext, icon: Icon, iconColor, iconBg, trend,
           </div>
         )}
       </div>
-      
+
       <div className="space-y-1">
         <p className="text-[11px] text-zinc-500 uppercase tracking-wider font-semibold">{label}</p>
         <p className="text-3xl font-bold text-white tracking-tight">{value}</p>
@@ -60,11 +60,13 @@ export function StatsCards({ agents, tasks }: StatsCardsProps) {
   const activeAgents = agents.filter(a => a.status === 'working').length;
   const blockedTasks = tasks.filter(t => t.status === 'blocked').length;
   const inProgressTasks = tasks.filter(t => t.status === 'in_progress').length;
+  // Convex documents use _creationTime (number in ms) instead of updated_at
+  // For "completed today", we check done tasks created today as a proxy
   const completedToday = tasks.filter(t => {
     if (t.status !== 'done') return false;
-    const updated = new Date(t.updated_at);
+    const created = new Date(t._creationTime);
     const today = new Date();
-    return updated.toDateString() === today.toDateString();
+    return created.toDateString() === today.toDateString();
   }).length;
 
   return (
@@ -77,9 +79,9 @@ export function StatsCards({ agents, tasks }: StatsCardsProps) {
         iconColor="text-purple-400"
         iconBg="bg-purple-500/15"
         trend="up"
-        trendValue={`${Math.round((activeAgents / agents.length) * 100)}%`}
+        trendValue={`${agents.length > 0 ? Math.round((activeAgents / agents.length) * 100) : 0}%`}
       />
-      
+
       <StatCard
         label="Blocked"
         value={blockedTasks}
@@ -89,7 +91,7 @@ export function StatsCards({ agents, tasks }: StatsCardsProps) {
         iconBg="bg-red-500/15"
         highlight={blockedTasks > 0}
       />
-      
+
       <StatCard
         label="In Progress"
         value={inProgressTasks}
@@ -98,7 +100,7 @@ export function StatsCards({ agents, tasks }: StatsCardsProps) {
         iconColor="text-orange-400"
         iconBg="bg-orange-500/15"
       />
-      
+
       <StatCard
         label="Completed Today"
         value={completedToday}

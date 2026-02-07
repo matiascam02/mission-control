@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useEffect, useState, useCallback } from 'react';
-import { DbAgent } from '@/lib/supabase';
+import { ConvexAgent } from '@/lib/convex-types';
 import { Maximize2, Minimize2, Zap } from 'lucide-react';
 
 // Import isometric engine
@@ -14,14 +14,14 @@ import { getActiveSpritePack } from '@/lib/isometric-engine/renderConfig';
 import { Tile, BuildingType } from '@/lib/isometric-engine/types';
 
 interface AgentPosition {
-  agentId: string;
+  agentName: string;
   x: number;
   y: number;
   status: 'idle' | 'working' | 'done' | 'blocked';
 }
 
 interface IsometricWorldProps {
-  agents: DbAgent[];
+  agents: ConvexAgent[];
   width?: number;
   height?: number;
 }
@@ -71,7 +71,7 @@ export function IsometricWorld({ agents, width = 800, height = 600 }: IsometricW
       const row: Tile[] = [];
       for (let x = 0; x < GRID_SIZE; x++) {
         let type: BuildingType = 'grass';
-        
+
         // Create office buildings in center
         if (x >= 10 && x <= 14 && y >= 10 && y <= 14) {
           if (Math.random() < 0.4) type = 'office_low';
@@ -88,7 +88,7 @@ export function IsometricWorld({ agents, width = 800, height = 600 }: IsometricW
           else if (rand < 0.08) type = 'shop_small';
           else if (rand < 0.15) type = 'tree';
         }
-        
+
         row.push(createTile(x, y, type));
       }
       grid.push(row);
@@ -104,9 +104,9 @@ export function IsometricWorld({ agents, width = 800, height = 600 }: IsometricW
       const radius = 5;
       const centerX = Math.floor(GRID_SIZE / 2);
       const centerY = Math.floor(GRID_SIZE / 2);
-      
+
       return {
-        agentId: agent.id,
+        agentName: agent.name.toLowerCase(),
         x: Math.floor(centerX + Math.cos(angle) * radius),
         y: Math.floor(centerY + Math.sin(angle) * radius),
         status: agent.status as any,
@@ -147,20 +147,20 @@ export function IsometricWorld({ agents, width = 800, height = 600 }: IsometricW
     ctx.save();
     const centerX = width / 2;
     const centerY = height / 2;
-    
+
     ctx.translate(centerX + offset.x, centerY + offset.y);
     ctx.scale(zoom, zoom);
 
     // Draw tiles
     if (tiles && tiles.length > 0) {
       const gridSize = tiles.length;
-      
+
       // Painter's algorithm
       for (let y = 0; y < gridSize; y++) {
         for (let x = 0; x < gridSize; x++) {
           const tile = tiles[y][x];
           const screenPos = gridToScreen(x, y, 0, 0);
-          
+
           // Draw base tile
           if (tile.building.type === 'water') {
             ctx.fillStyle = '#4fa4b8';
@@ -184,8 +184,8 @@ export function IsometricWorld({ agents, width = 800, height = 600 }: IsometricW
               const renderInfo = getSpriteRenderInfo(
                 tile.building.type,
                 tile.building,
-                x, 
-                y, 
+                x,
+                y,
                 screenPos.screenX,
                 screenPos.screenY,
                 img.width,
@@ -196,7 +196,7 @@ export function IsometricWorld({ agents, width = 800, height = 600 }: IsometricW
                 const s = renderInfo.coords;
                 if (s) {
                   const p = renderInfo.positioning;
-                  
+
                   ctx.save();
                   if (renderInfo.shouldFlip) {
                     ctx.translate(p.drawX + p.destWidth, p.drawY);
@@ -214,11 +214,11 @@ export function IsometricWorld({ agents, width = 800, height = 600 }: IsometricW
           // Draw agent markers
           const agentAtPos = agentPositions.find(ap => ap.x === x && ap.y === y);
           if (agentAtPos) {
-            const agent = agents.find(a => a.id === agentAtPos.agentId);
+            const agent = agents.find(a => a.name.toLowerCase() === agentAtPos.agentName);
             if (agent) {
               // Draw agent marker above the tile
               const markerY = screenPos.screenY - 40;
-              
+
               // Glow effect for working agents
               if (agent.status === 'working') {
                 ctx.save();
@@ -228,7 +228,7 @@ export function IsometricWorld({ agents, width = 800, height = 600 }: IsometricW
                 ctx.fill();
                 ctx.restore();
               }
-              
+
               // Agent circle
               ctx.save();
               ctx.fillStyle = agent.color || '#f97316';
@@ -238,14 +238,14 @@ export function IsometricWorld({ agents, width = 800, height = 600 }: IsometricW
               ctx.arc(screenPos.screenX, markerY, 12, 0, Math.PI * 2);
               ctx.fill();
               ctx.stroke();
-              
+
               // Agent emoji
               ctx.font = '16px Arial';
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
               ctx.fillText(agent.emoji || '🤖', screenPos.screenX, markerY);
               ctx.restore();
-              
+
               // Agent name label
               ctx.save();
               ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
@@ -281,7 +281,7 @@ export function IsometricWorld({ agents, width = 800, height = 600 }: IsometricW
     setIsDragging(true);
     setLastMouse({ x: e.clientX, y: e.clientY });
   };
-  
+
   const handleMouseMove = (e: React.MouseEvent) => {
     if (isDragging) {
       const dx = e.clientX - lastMouse.x;
@@ -290,11 +290,11 @@ export function IsometricWorld({ agents, width = 800, height = 600 }: IsometricW
       setLastMouse({ x: e.clientX, y: e.clientY });
     }
   };
-  
+
   const handleMouseUp = () => {
     setIsDragging(false);
   };
-  
+
   const handleWheel = (e: React.WheelEvent) => {
     const zoomFactor = 1.1;
     const direction = e.deltaY > 0 ? 1/zoomFactor : zoomFactor;
@@ -324,7 +324,7 @@ export function IsometricWorld({ agents, width = 800, height = 600 }: IsometricW
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <button
               onClick={resetView}

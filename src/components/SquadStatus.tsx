@@ -1,44 +1,44 @@
 'use client';
 
-import { DbAgent } from '@/lib/supabase';
+import { ConvexAgent } from '@/lib/convex-types';
 import { AgentSprite, hasSprite } from './AgentSprite';
 import { Zap, Coffee, AlertTriangle, CheckCircle } from 'lucide-react';
 
 interface SquadStatusProps {
-  agents: DbAgent[];
-  onAgentClick?: (agent: DbAgent) => void;
+  agents: ConvexAgent[];
+  onAgentClick?: (agent: ConvexAgent) => void;
 }
 
-const statusConfig: Record<string, { 
-  label: string; 
+const statusConfig: Record<string, {
+  label: string;
   color: string;
   bgColor: string;
   icon: typeof Zap;
   pulse: boolean;
 }> = {
-  working: { 
-    label: 'Working', 
+  working: {
+    label: 'Working',
     color: 'text-emerald-400',
     bgColor: 'bg-emerald-500/20 border-emerald-500/30',
     icon: Zap,
     pulse: true,
   },
-  idle: { 
-    label: 'Idle', 
+  idle: {
+    label: 'Idle',
     color: 'text-zinc-400',
     bgColor: 'bg-zinc-500/10 border-zinc-500/20',
     icon: Coffee,
     pulse: false,
   },
-  blocked: { 
-    label: 'Blocked', 
+  blocked: {
+    label: 'Blocked',
     color: 'text-red-400',
     bgColor: 'bg-red-500/20 border-red-500/30',
     icon: AlertTriangle,
     pulse: true,
   },
-  done: { 
-    label: 'Done', 
+  done: {
+    label: 'Done',
     color: 'text-blue-400',
     bgColor: 'bg-blue-500/10 border-blue-500/20',
     icon: CheckCircle,
@@ -76,10 +76,11 @@ export function SquadStatus({ agents, onAgentClick }: SquadStatusProps) {
         {sortedAgents.map((agent) => {
           const config = statusConfig[agent.status] || statusConfig.idle;
           const Icon = config.icon;
-          
+          const spriteKey = agent.name.toLowerCase();
+
           return (
             <button
-              key={agent.id}
+              key={agent._id}
               onClick={() => onAgentClick?.(agent)}
               className={`
                 relative p-3 rounded-xl border transition-all
@@ -88,23 +89,23 @@ export function SquadStatus({ agents, onAgentClick }: SquadStatusProps) {
                 ${config.bgColor}
               `}
               style={{
-                boxShadow: agent.status === 'working' 
+                boxShadow: agent.status === 'working'
                   ? `0 4px 20px ${agent.color || '#10b981'}30`
                   : undefined
               }}
             >
               {/* Sprite or Emoji */}
               <div className="flex justify-center mb-2">
-                {hasSprite(agent.id) ? (
+                {hasSprite(spriteKey) ? (
                   <div className={`relative ${config.pulse ? 'animate-pulse-subtle' : ''}`}>
-                    <AgentSprite 
-                      agentId={agent.id} 
+                    <AgentSprite
+                      agentId={spriteKey}
                       status={agent.status as any}
                       size={56}
                     />
                     {/* Glow effect for working agents */}
                     {agent.status === 'working' && (
-                      <div 
+                      <div
                         className="absolute inset-0 rounded-full blur-lg opacity-30 -z-10"
                         style={{ backgroundColor: agent.color || '#10b981' }}
                       />
@@ -130,7 +131,7 @@ export function SquadStatus({ agents, onAgentClick }: SquadStatusProps) {
 
               {/* Working indicator ring */}
               {agent.status === 'working' && (
-                <div 
+                <div
                   className="absolute inset-0 rounded-xl border-2 animate-ping opacity-30 pointer-events-none"
                   style={{ borderColor: agent.color || '#10b981' }}
                 />
@@ -146,7 +147,7 @@ export function SquadStatus({ agents, onAgentClick }: SquadStatusProps) {
           <p className="text-xs text-zinc-500 uppercase tracking-wider mb-2 font-semibold">Currently Working On</p>
           <div className="space-y-2">
             {agents.filter(a => a.current_task && a.status === 'working').map(agent => (
-              <div key={agent.id} className="flex items-center gap-2 text-sm">
+              <div key={agent._id} className="flex items-center gap-2 text-sm">
                 <span>{agent.emoji || '🤖'}</span>
                 <span className="text-zinc-400 font-medium">{agent.name}:</span>
                 <span className="text-zinc-300 truncate">{agent.current_task}</span>

@@ -1,13 +1,13 @@
 'use client';
 
-import { DbAgent } from '@/lib/supabase';
+import { ConvexAgent } from '@/lib/convex-types';
 import { AgentCard } from './AgentCard';
 import { X, Sparkles, Zap } from 'lucide-react';
 
 interface SidebarProps {
-  agents: DbAgent[];
+  agents: ConvexAgent[];
   onClose?: () => void;
-  onAgentClick?: (agent: DbAgent) => void;
+  onAgentClick?: (agent: ConvexAgent) => void;
 }
 
 export function Sidebar({ agents, onClose, onAgentClick }: SidebarProps) {
@@ -29,8 +29,8 @@ export function Sidebar({ agents, onClose, onAgentClick }: SidebarProps) {
             </div>
           </div>
           {onClose && (
-            <button 
-              onClick={onClose} 
+            <button
+              onClick={onClose}
               className="lg:hidden p-2 hover:bg-white/5 rounded-lg transition-colors"
             >
               <X size={18} className="text-zinc-400" />
@@ -70,8 +70,8 @@ export function Sidebar({ agents, onClose, onAgentClick }: SidebarProps) {
         </div>
         <div className="space-y-0.5">
           {agents.map((agent, index) => (
-            <div 
-              key={agent.id}
+            <div
+              key={agent._id}
               className="animate-fade-in-up"
               style={{ animationDelay: `${index * 0.05}s` }}
             >

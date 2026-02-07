@@ -1,19 +1,19 @@
 'use client';
 
-import { DbActivity, DbAgent } from '@/lib/supabase';
-import { 
-  Zap, 
-  CheckCircle, 
-  AlertTriangle, 
-  MessageSquare, 
+import { ConvexActivity, ConvexAgent } from '@/lib/convex-types';
+import {
+  Zap,
+  CheckCircle,
+  AlertTriangle,
+  MessageSquare,
   ArrowRight,
   Clock,
   Activity
 } from 'lucide-react';
 
 interface ActivityTimelineProps {
-  activities: DbActivity[];
-  agents: DbAgent[];
+  activities: ConvexActivity[];
+  agents: ConvexAgent[];
   limit?: number;
 }
 
@@ -54,13 +54,13 @@ const activityConfig: Record<string, {
   },
 };
 
-function formatTime(dateStr: string): string {
-  const date = new Date(dateStr);
+function formatTime(timestamp: number): string {
+  const date = new Date(timestamp);
   const now = new Date();
   const diff = now.getTime() - date.getTime();
   const minutes = Math.floor(diff / (1000 * 60));
   const hours = Math.floor(minutes / 60);
-  
+
   if (minutes < 1) return 'Just now';
   if (minutes < 60) return `${minutes}m ago`;
   if (hours < 24) return `${hours}h ago`;
@@ -76,20 +76,20 @@ function getHourLabel(hour: number): string {
 
 export function ActivityTimeline({ activities, agents, limit = 10 }: ActivityTimelineProps) {
   const recentActivities = activities.slice(0, limit);
-  
+
   // Build hourly activity heatmap for today
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const hourlyActivity: number[] = new Array(24).fill(0);
-  
+
   activities.forEach(activity => {
-    const actDate = new Date(activity.created_at);
+    const actDate = new Date(activity._creationTime);
     if (actDate >= todayStart) {
       const hour = actDate.getHours();
       hourlyActivity[hour]++;
     }
   });
-  
+
   const maxActivity = Math.max(...hourlyActivity, 1);
   const currentHour = now.getHours();
 
@@ -118,7 +118,7 @@ export function ActivityTimeline({ activities, agents, limit = 10 }: ActivityTim
             const height = count > 0 ? Math.max(20, (count / maxActivity) * 100) : 8;
             const isPast = hour < currentHour;
             const isCurrent = hour === currentHour;
-            
+
             return (
               <div
                 key={hour}
@@ -127,9 +127,9 @@ export function ActivityTimeline({ activities, agents, limit = 10 }: ActivityTim
               >
                 <div
                   className={`w-full rounded-t transition-all ${
-                    isCurrent 
-                      ? 'bg-orange-500' 
-                      : count > 0 
+                    isCurrent
+                      ? 'bg-orange-500'
+                      : count > 0
                         ? isPast ? 'bg-violet-500/60' : 'bg-violet-500/30'
                         : 'bg-white/5'
                   }`}
@@ -159,17 +159,17 @@ export function ActivityTimeline({ activities, agents, limit = 10 }: ActivityTim
           recentActivities.map((activity) => {
             const config = activityConfig[activity.type] || activityConfig.default;
             const Icon = config.icon;
-            const agent = agents.find(a => a.id === activity.agent_id);
+            const agent = agents.find(a => a._id === activity.agent_id);
 
             return (
               <div
-                key={activity.id}
+                key={activity._id}
                 className="flex items-start gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors"
               >
                 <div className={`w-7 h-7 rounded-lg ${config.bgColor} flex items-center justify-center flex-shrink-0`}>
                   <Icon size={14} className={config.color} />
                 </div>
-                
+
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     {agent && (
@@ -183,7 +183,7 @@ export function ActivityTimeline({ activities, agents, limit = 10 }: ActivityTim
                 </div>
 
                 <span className="text-[10px] text-zinc-600 flex-shrink-0">
-                  {formatTime(activity.created_at)}
+                  {formatTime(activity._creationTime)}
                 </span>
               </div>
             );

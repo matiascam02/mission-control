@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ToastContainer } from "@/components/Toast";
+import { ConvexClientProvider } from "@/components/ConvexClientProvider";
 
-const inter = Inter({ 
+const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
 });
@@ -32,12 +33,14 @@ export default function RootLayout({
         {/* Background layers */}
         <div className="fixed inset-0 bg-grid-pattern pointer-events-none" />
         <div className="fixed inset-0 gradient-radial-glow pointer-events-none" />
-        
+
         {/* Content */}
-        <div className="relative">
-          {children}
-        </div>
-        
+        <ConvexClientProvider>
+          <div className="relative">
+            {children}
+          </div>
+        </ConvexClientProvider>
+
         {/* Toast notifications */}
         <ToastContainer />
       </body>

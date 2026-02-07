@@ -1,27 +1,27 @@
 'use client';
 
-import { DbActivity, DbAgent } from '@/lib/supabase';
+import { ConvexActivity, ConvexAgent } from '@/lib/convex-types';
 import { Activity, Zap, CheckCircle2, MessageSquare, ArrowRight, Play, Clock } from 'lucide-react';
 
 interface ActivityFeedProps {
-  activities: DbActivity[];
-  agents: DbAgent[];
+  activities: ConvexActivity[];
+  agents: ConvexAgent[];
 }
 
-function formatTime(dateStr: string): string {
-  const date = new Date(dateStr);
+function formatTime(timestamp: number): string {
+  const date = new Date(timestamp);
   const now = new Date();
   const diff = now.getTime() - date.getTime();
   const seconds = Math.floor(diff / 1000);
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);
-  
+
   if (seconds < 60) return 'just now';
   if (minutes < 60) return `${minutes}m ago`;
   if (hours < 24) return `${hours}h ago`;
-  
-  return date.toLocaleDateString('en-US', { 
-    month: 'short', 
+
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
     day: 'numeric',
     hour: 'numeric',
     minute: '2-digit'
@@ -45,16 +45,16 @@ function getActivityIcon(type: string) {
   }
 }
 
-function ActivityItem({ 
-  activity, 
+function ActivityItem({
+  activity,
   agents,
-  isLast 
-}: { 
-  activity: DbActivity; 
-  agents: DbAgent[];
+  isLast
+}: {
+  activity: ConvexActivity;
+  agents: ConvexAgent[];
   isLast: boolean;
 }) {
-  const agent = agents.find(a => a.id === activity.agent_id);
+  const agent = agents.find(a => a._id === activity.agent_id);
   const color = agent?.color || '#f97316';
   const { icon: Icon, color: iconColor, bg: iconBg } = getActivityIcon(activity.type);
 
@@ -64,12 +64,12 @@ function ActivityItem({
       {!isLast && (
         <div className="absolute left-5 top-12 bottom-0 w-[2px] bg-gradient-to-b from-white/10 to-transparent" />
       )}
-      
+
       {/* Avatar/Icon */}
       <div className="relative z-10 flex-shrink-0">
-        <div 
+        <div
           className="w-10 h-10 rounded-xl flex items-center justify-center text-base transition-transform group-hover:scale-110"
-          style={{ 
+          style={{
             backgroundColor: color + '20',
           }}
         >
@@ -80,7 +80,7 @@ function ActivityItem({
           <Icon size={10} className={iconColor} />
         </div>
       </div>
-      
+
       {/* Content */}
       <div className="flex-1 min-w-0 pt-1">
         <div className="flex items-center gap-2 mb-1">
@@ -89,7 +89,7 @@ function ActivityItem({
           </span>
           <span className="text-[10px] text-zinc-600 font-mono flex items-center gap-1">
             <Clock size={10} />
-            {formatTime(activity.created_at)}
+            {formatTime(activity._creationTime)}
           </span>
         </div>
         <p className="text-sm text-zinc-400 leading-relaxed">
@@ -124,7 +124,7 @@ export function ActivityFeed({ activities, agents }: ActivityFeedProps) {
           </div>
         </div>
       </div>
-      
+
       {/* Activity List */}
       <div className="flex-1 overflow-y-auto p-4">
         {activities.length === 0 ? (
@@ -138,9 +138,9 @@ export function ActivityFeed({ activities, agents }: ActivityFeedProps) {
         ) : (
           <div className="space-y-0">
             {activities.map((activity, index) => (
-              <ActivityItem 
-                key={activity.id} 
-                activity={activity} 
+              <ActivityItem
+                key={activity._id}
+                activity={activity}
                 agents={agents}
                 isLast={index === activities.length - 1}
               />

@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import { Sidebar } from '@/components/Sidebar';
 import { Header } from '@/components/Header';
 import { StatsCards } from '@/components/StatsCards';
@@ -8,92 +10,20 @@ import { SquadStatus } from '@/components/SquadStatus';
 import { HealthMonitor } from '@/components/HealthMonitor';
 import { TaskBoard } from '@/components/TaskBoard';
 import { AgentDialogView } from '@/components/AgentDialogView';
-import { supabase, DbAgent, DbTask, DbActivity } from '@/lib/supabase';
+import { ConvexAgent } from '@/lib/convex-types';
 import { Menu, Sparkles } from 'lucide-react';
-import { showAgentStatusToast } from '@/components/Toast';
 
 export default function Home() {
-  // Removed activeTab - focusing on single dashboard view
-  const [agents, setAgents] = useState<DbAgent[]>([]);
-  const [tasks, setTasks] = useState<DbTask[]>([]);
-  const [activities, setActivities] = useState<DbActivity[]>([]);
-  const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState<DbAgent | null>(null);
+  const [selectedAgent, setSelectedAgent] = useState<ConvexAgent | null>(null);
 
-  // Fetch initial data
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [agentsRes, tasksRes, activitiesRes] = await Promise.all([
-          supabase.from('agents').select('*').order('level'),
-          supabase.from('tasks').select('*').order('created_at', { ascending: false }),
-          supabase.from('activities').select('*').order('created_at', { ascending: false }).limit(20),
-        ]);
+  // Convex reactive queries - automatically update when data changes
+  const agents = useQuery(api.agents.list);
+  const tasks = useQuery(api.tasks.list);
+  const activities = useQuery(api.activities.recent, { limit: 20 });
 
-        if (agentsRes.data) setAgents(agentsRes.data);
-        if (tasksRes.data) setTasks(tasksRes.data);
-        if (activitiesRes.data) setActivities(activitiesRes.data);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchData();
-  }, []);
-
-  // Real-time subscriptions
-  useEffect(() => {
-    const agentsChannel = supabase
-      .channel('agents-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'agents' }, (payload) => {
-        if (payload.eventType === 'UPDATE') {
-          const newAgent = payload.new as DbAgent;
-          const oldAgent = agents.find(a => a.id === newAgent.id);
-          
-          // Show toast if status changed
-          if (oldAgent && oldAgent.status !== newAgent.status) {
-            showAgentStatusToast(
-              newAgent.name,
-              newAgent.emoji || '🤖',
-              newAgent.status,
-              newAgent.current_task || undefined
-            );
-          }
-          
-          setAgents(prev => prev.map(a => a.id === newAgent.id ? newAgent : a));
-        }
-      })
-      .subscribe();
-
-    const activitiesChannel = supabase
-      .channel('activities-changes')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'activities' }, (payload) => {
-        setActivities(prev => [payload.new as DbActivity, ...prev.slice(0, 19)]);
-      })
-      .subscribe();
-
-    const tasksChannel = supabase
-      .channel('tasks-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          setTasks(prev => [payload.new as DbTask, ...prev]);
-        } else if (payload.eventType === 'UPDATE') {
-          setTasks(prev => prev.map(t => t.id === payload.new.id ? payload.new as DbTask : t));
-        } else if (payload.eventType === 'DELETE') {
-          setTasks(prev => prev.filter(t => t.id !== payload.old.id));
-        }
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(agentsChannel);
-      supabase.removeChannel(activitiesChannel);
-      supabase.removeChannel(tasksChannel);
-    };
-  }, []);
+  // Loading state: useQuery returns undefined while loading
+  const loading = agents === undefined || tasks === undefined || activities === undefined;
 
   if (loading) {
     return (
@@ -118,30 +48,30 @@ export default function Home() {
     <div className="flex h-screen text-white overflow-hidden">
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden animate-fade-in-up"
           onClick={() => setSidebarOpen(false)}
         />
       )}
-      
+
       {/* Sidebar */}
       <div className={`
         fixed lg:relative inset-y-0 left-0 z-50
         transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0
         transition-transform duration-300 ease-out
       `}>
-        <Sidebar 
-          agents={agents} 
+        <Sidebar
+          agents={agents}
           onClose={() => setSidebarOpen(false)}
           onAgentClick={(agent) => setSelectedAgent(agent)}
         />
       </div>
-      
+
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden w-full">
         {/* Mobile Header */}
         <header className="h-16 bg-[#141414]/90 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-4 lg:hidden">
-          <button 
+          <button
             onClick={() => setSidebarOpen(true)}
             className="p-2.5 hover:bg-white/5 rounded-xl transition-colors"
           >
@@ -160,7 +90,7 @@ export default function Home() {
         <div className="hidden lg:block">
           <Header agents={agents} tasks={tasks} />
         </div>
-        
+
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
               <div className="p-4 lg:p-8">
@@ -169,7 +99,7 @@ export default function Home() {
                   <h1 className="text-2xl font-bold text-white mb-1">Dashboard</h1>
                   <p className="text-sm text-zinc-500">Monitor your squad&apos;s activity and task progress</p>
                 </div>
-                
+
                 {/* Stats */}
                 <StatsCards agents={agents} tasks={tasks} />
 
@@ -180,13 +110,13 @@ export default function Home() {
                 <div className="mb-6">
                   <HealthMonitor agents={agents} onAgentClick={setSelectedAgent} />
                 </div>
-                
+
                 {/* Task Board Section */}
                 <div className="mb-4">
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <h2 className="text-lg font-semibold text-white">Task Board</h2>
-                      <p className="text-xs text-zinc-500 mt-0.5">Drag tasks between columns • Click agents to chat</p>
+                      <p className="text-xs text-zinc-500 mt-0.5">Drag tasks between columns</p>
                     </div>
                   </div>
                   <TaskBoard tasks={tasks} agents={agents} />

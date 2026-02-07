@@ -1,11 +1,11 @@
 'use client';
 
-import { DbAgent, DbTask } from '@/lib/supabase';
+import { ConvexAgent, ConvexTask } from '@/lib/convex-types';
 import { Users, ListTodo } from 'lucide-react';
 
 interface HeaderProps {
-  agents: DbAgent[];
-  tasks: DbTask[];
+  agents: ConvexAgent[];
+  tasks: ConvexTask[];
   onMenuClick?: () => void;
   onActivityClick?: () => void;
 }
@@ -31,13 +31,13 @@ export function Header({ agents, tasks }: HeaderProps) {
           <span className="text-sm font-semibold text-white">{activeAgents}</span>
           <span className="text-xs text-zinc-500">active</span>
         </div>
-        
+
         <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/5">
           <ListTodo size={16} className="text-blue-400" />
           <span className="text-sm font-semibold text-white">{tasks.length}</span>
           <span className="text-xs text-zinc-500">tasks</span>
         </div>
-        
+
         {blockedTasks > 0 && (
           <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/20">
             <div className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />

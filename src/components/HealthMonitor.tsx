@@ -1,37 +1,37 @@
 'use client';
 
-import { DbAgent } from '@/lib/supabase';
-import { 
-  Heart, 
-  HeartPulse, 
-  HeartOff, 
-  Clock, 
+import { ConvexAgent } from '@/lib/convex-types';
+import {
+  Heart,
+  HeartPulse,
+  HeartOff,
+  Clock,
   AlertTriangle,
   CheckCircle,
   XCircle
 } from 'lucide-react';
 
 interface HealthMonitorProps {
-  agents: DbAgent[];
-  onAgentClick?: (agent: DbAgent) => void;
+  agents: ConvexAgent[];
+  onAgentClick?: (agent: ConvexAgent) => void;
 }
 
 type HealthStatus = 'healthy' | 'stale' | 'dead' | 'blocked';
 
-function getHealthStatus(agent: DbAgent): { status: HealthStatus; message: string; minutesAgo: number | null } {
+function getHealthStatus(agent: ConvexAgent): { status: HealthStatus; message: string; minutesAgo: number | null } {
   // Blocked takes priority
   if (agent.status === 'blocked') {
     return { status: 'blocked', message: 'Blocked - needs attention', minutesAgo: null };
   }
 
-  const lastActive = agent.last_heartbeat || agent.updated_at;
+  // Convex uses last_heartbeat as a number (epoch ms) or _creationTime
+  const lastActive = agent.last_heartbeat || agent._creationTime;
   if (!lastActive) {
     return { status: 'dead', message: 'Never seen', minutesAgo: null };
   }
 
-  const now = new Date();
-  const lastTime = new Date(lastActive);
-  const minutesAgo = Math.floor((now.getTime() - lastTime.getTime()) / (1000 * 60));
+  const now = Date.now();
+  const minutesAgo = Math.floor((now - lastActive) / (1000 * 60));
 
   if (minutesAgo < 20) {
     return { status: 'healthy', message: `Active ${minutesAgo}m ago`, minutesAgo };
@@ -112,7 +112,7 @@ export function HealthMonitor({ agents, onAgentClick }: HealthMonitorProps) {
             <p className="text-xs text-zinc-500">Agent heartbeat status</p>
           </div>
         </div>
-        
+
         {/* Quick stats */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 text-xs">
@@ -144,7 +144,7 @@ export function HealthMonitor({ agents, onAgentClick }: HealthMonitorProps) {
 
           return (
             <button
-              key={agent.id}
+              key={agent._id}
               onClick={() => onAgentClick?.(agent)}
               className={`
                 w-full flex items-center gap-3 p-3 rounded-xl border transition-all

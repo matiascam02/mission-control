@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { DbAgent } from '@/lib/supabase';
+import { ConvexAgent } from '@/lib/convex-types';
 import { AgentSprite } from './AgentSprite';
 import { X, Send, Loader2 } from 'lucide-react';
 
 interface AgentDialogViewProps {
-  agent: DbAgent;
+  agent: ConvexAgent;
   onClose: () => void;
 }
 
@@ -19,18 +19,20 @@ interface Message {
 
 // Unique greetings based on anime personalities
 const AGENT_GREETINGS: Record<string, string> = {
-  'franky': "SUUUPER! I'm Franky, the shipwright! Need something built? I'm your cyborg! 🤖⭐",
-  'reigen': "Ah, welcome! I'm Reigen, your strategic consultant. Let me show you the path to success... for a reasonable fee. 😏✨",
-  'robin': "Fufufu~ I'm Robin. I find history and research fascinating. What mystery shall we uncover today? 📚🌸",
-  'nanami': "I'm Nanami. Let's keep this professional and efficient. Time is money, after all. ⏰💼",
-  'frieren': "...Oh, hello. I'm Frieren. I've been documenting things for about a thousand years. What do you need? ❄️📜",
-  'maomao': "Hmm? I'm Maomao. If it's poison or code bugs you're worried about, I'll analyze it thoroughly. 🧪🔍",
-  'rimuru': "Yo! Rimuru here! I used to be a slime, now I design interfaces. Life's weird like that! 🔵✨",
-  'hoyuelo': "¡Hola! Soy Hoyuelo, el espíritu que todo lo ve. ¿En qué puedo ayudarte? 😊👻",
+  'franky': "SUUUPER! I'm Franky, the shipwright! Need something built? I'm your cyborg! \u{1F916}\u{2B50}",
+  'reigen': "Ah, welcome! I'm Reigen, your strategic consultant. Let me show you the path to success... for a reasonable fee. \u{1F60F}\u{2728}",
+  'robin': "Fufufu~ I'm Robin. I find history and research fascinating. What mystery shall we uncover today? \u{1F4DA}\u{1F338}",
+  'nanami': "I'm Nanami. Let's keep this professional and efficient. Time is money, after all. \u{23F0}\u{1F4BC}",
+  'frieren': "...Oh, hello. I'm Frieren. I've been documenting things for about a thousand years. What do you need? \u{2744}\u{FE0F}\u{1F4DC}",
+  'maomao': "Hmm? I'm Maomao. If it's poison or code bugs you're worried about, I'll analyze it thoroughly. \u{1F9EA}\u{1F50D}",
+  'rimuru': "Yo! Rimuru here! I used to be a slime, now I design interfaces. Life's weird like that! \u{1F535}\u{2728}",
+  'hoyuelo': "\u{00A1}Hola! Soy Hoyuelo, el esp\u{00ED}ritu que todo lo ve. \u{00BF}En qu\u{00E9} puedo ayudarte? \u{1F60A}\u{1F47B}",
 };
 
-function getAgentGreeting(agentId: string, agentName: string): string {
-  return AGENT_GREETINGS[agentId.toLowerCase()] || `Hey! I'm ${agentName}. What's up?`;
+function getAgentGreeting(agentName: string): string {
+  // Match by agent name (lowercase) since Convex IDs are opaque
+  const nameKey = agentName.toLowerCase();
+  return AGENT_GREETINGS[nameKey] || `Hey! I'm ${agentName}. What's up?`;
 }
 
 export function AgentDialogView({ agent, onClose }: AgentDialogViewProps) {
@@ -38,6 +40,7 @@ export function AgentDialogView({ agent, onClose }: AgentDialogViewProps) {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const spriteKey = agent.name.toLowerCase();
 
   // Reset messages when agent changes
   useEffect(() => {
@@ -45,16 +48,16 @@ export function AgentDialogView({ agent, onClose }: AgentDialogViewProps) {
       {
         id: '0',
         role: 'agent',
-        content: getAgentGreeting(agent.id, agent.name),
+        content: getAgentGreeting(agent.name),
         timestamp: new Date(),
       }
     ]);
     setCurrentMessageIndex(0);
-  }, [agent.id, agent.name]);
+  }, [agent._id, agent.name]);
   const [displayedText, setDisplayedText] = useState('');
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
-  
+
   const currentMessage = messages[currentMessageIndex];
   const hasNext = currentMessageIndex < messages.length - 1;
   const hasPrev = currentMessageIndex > 0;
@@ -62,11 +65,11 @@ export function AgentDialogView({ agent, onClose }: AgentDialogViewProps) {
   // Typewriter effect for current message
   useEffect(() => {
     if (!currentMessage) return;
-    
+
     setIsTyping(true);
     setDisplayedText('');
     let currentIndex = 0;
-    
+
     const interval = setInterval(() => {
       if (currentIndex < currentMessage.content.length) {
         setDisplayedText(currentMessage.content.slice(0, currentIndex + 1));
@@ -123,23 +126,23 @@ export function AgentDialogView({ agent, onClose }: AgentDialogViewProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          agentId: agent.id,
+          agentId: agent._id,
           message: input.trim(),
         }),
       });
 
       const data = await response.json();
-      
+
       let responseContent: string;
       if (!response.ok) {
         // Handle API errors gracefully
-        responseContent = data.error === 'Gateway not configured' 
-          ? "⚠️ The gateway isn't configured yet. Ask Matias to set OPENCLAW_GATEWAY_URL and OPENCLAW_GATEWAY_TOKEN in Railway."
-          : `⚠️ Couldn't reach the agent: ${data.error || 'Unknown error'}`;
+        responseContent = data.error === 'Gateway not configured'
+          ? "The gateway isn't configured yet. Ask Matias to set OPENCLAW_GATEWAY_URL and OPENCLAW_GATEWAY_TOKEN in Railway."
+          : `Couldn't reach the agent: ${data.error || 'Unknown error'}`;
       } else {
         responseContent = data.response;
       }
-      
+
       const agentResponse: Message = {
         id: (Date.now() + 1).toString(),
         role: 'agent',
@@ -155,7 +158,7 @@ export function AgentDialogView({ agent, onClose }: AgentDialogViewProps) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'agent',
-        content: `⚠️ Network error: couldn't connect to the server. Try again?`,
+        content: `Network error: couldn't connect to the server. Try again?`,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -179,7 +182,7 @@ export function AgentDialogView({ agent, onClose }: AgentDialogViewProps) {
   return (
     <>
       {/* Backdrop with blur and noise pattern */}
-      <div 
+      <div
         className="fixed inset-0 bg-black/90 backdrop-blur-xl z-40 animate-fade-in"
         onClick={onClose}
       />
@@ -187,11 +190,11 @@ export function AgentDialogView({ agent, onClose }: AgentDialogViewProps) {
       {/* Main Dialog Container */}
       <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none overflow-hidden">
         <div className="w-full h-full relative pointer-events-auto animate-slide-up">
-          
+
           {/* Background with themed gradient and dot pattern */}
-          <div 
+          <div
             className="absolute inset-0 opacity-80"
-            style={{ 
+            style={{
               background: bgGradient,
               backgroundImage: `
                 radial-gradient(${popColor}20 1px, transparent 1px),
@@ -200,9 +203,9 @@ export function AgentDialogView({ agent, onClose }: AgentDialogViewProps) {
               backgroundSize: '30px 30px, 100px 100%'
             }}
           />
-          
+
           {/* Moving diagonal lines overlay */}
-          <div className="absolute inset-0 opacity-10 pointer-events-none" 
+          <div className="absolute inset-0 opacity-10 pointer-events-none"
                style={{
                  backgroundImage: `repeating-linear-gradient(45deg, ${popColor}, ${popColor} 10px, transparent 10px, transparent 20px)`
                }}
@@ -220,15 +223,15 @@ export function AgentDialogView({ agent, onClose }: AgentDialogViewProps) {
           <div className="absolute left-[5%] md:left-[10%] top-1/2 -translate-y-1/2 animate-slide-in-left origin-bottom">
             <div className="relative animate-float">
               {/* Explosive background behind sprite */}
-              <div 
+              <div
                 className="absolute inset-0 blur-3xl opacity-30 animate-pulse"
                 style={{ backgroundColor: popColor }}
               />
-              
+
               {/* Sprite container with breathing animation - 15% smaller */}
               <div className="relative w-[255px] h-[255px] md:w-[425px] md:h-[425px] flex items-center justify-center animate-breathe">
-                <AgentSprite 
-                  agentId={agent.id} 
+                <AgentSprite
+                  agentId={spriteKey}
                   status={agent.status as any}
                   size={408}
                   className="drop-shadow-[0_0_30px_rgba(0,0,0,0.5)]"
@@ -239,25 +242,25 @@ export function AgentDialogView({ agent, onClose }: AgentDialogViewProps) {
 
           {/* Dialog Text Box - Bottom with Tech Border */}
           <div className="absolute bottom-0 left-0 right-0 p-4 md:p-12 animate-slide-up-delayed">
-            
+
             <div className="max-w-4xl mx-auto relative">
               {/* Decorative elements */}
-              <div 
-                className="absolute -top-16 left-0 w-32 h-1 animate-pulse" 
-                style={{ backgroundColor: popColor }} 
+              <div
+                className="absolute -top-16 left-0 w-32 h-1 animate-pulse"
+                style={{ backgroundColor: popColor }}
               />
-              <div 
-                className="absolute -top-12 left-0 w-16 h-1 opacity-50" 
-                style={{ backgroundColor: popColor }} 
+              <div
+                className="absolute -top-12 left-0 w-16 h-1 opacity-50"
+                style={{ backgroundColor: popColor }}
               />
 
               {/* Name plate and Role Badge - Inline, no gap */}
               <div className="relative z-10 flex items-end gap-0">
                 {/* Name plate - Angled */}
                 <div className="inline-block transform -skew-x-12 mb-[-4px]">
-                  <div 
+                  <div
                     className="px-8 py-2 font-black text-xl text-white shadow-lg border-t-2 border-l-2 border-r-2 border-white/20"
-                    style={{ 
+                    style={{
                       backgroundColor: popColor,
                       boxShadow: `0 0 20px ${popColor}50`
                     }}
@@ -267,7 +270,7 @@ export function AgentDialogView({ agent, onClose }: AgentDialogViewProps) {
                     </span>
                   </div>
                 </div>
-                
+
                 {/* Role Badge */}
                 <div className="inline-block transform -skew-x-12 mb-[-4px] ml-[-4px]">
                    <div className="px-4 py-1 bg-yellow-400 text-black text-xs font-black uppercase tracking-widest shadow-lg">
@@ -279,7 +282,7 @@ export function AgentDialogView({ agent, onClose }: AgentDialogViewProps) {
               </div>
 
               {/* Main text box container */}
-              <div 
+              <div
                 className="relative bg-black/90 border-t-4 border-b-4 backdrop-blur-xl p-8 min-h-[200px] cursor-pointer group shadow-2xl"
                 style={{ borderColor: popColor }}
                 onClick={handleTextBoxClick}
@@ -312,14 +315,14 @@ export function AgentDialogView({ agent, onClose }: AgentDialogViewProps) {
                         disabled={!hasPrev}
                         className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/20 disabled:opacity-20 rounded-full transition-all hover:scale-110 border border-white/10"
                       >
-                        ←
+                        &larr;
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); handleNext(); }}
                         disabled={!hasNext}
                         className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/20 disabled:opacity-20 rounded-full transition-all hover:scale-110 border border-white/10"
                       >
-                        →
+                        &rarr;
                       </button>
                     </div>
                   </div>
@@ -339,20 +342,20 @@ export function AgentDialogView({ agent, onClose }: AgentDialogViewProps) {
                     placeholder="Enter your argument..."
                     disabled={isSending}
                     className="relative w-full px-6 py-4 bg-black/80 border-2 border-white/10 rounded-xl text-white placeholder:text-white/30 focus:outline-none focus:border-white/40 transition-all text-lg font-medium"
-                    style={{ 
+                    style={{
                       boxShadow: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.3)'
                     }}
                   />
                 </div>
-                
+
                 <button
                   onClick={handleSend}
                   disabled={!input.trim() || isSending}
                   className="px-8 py-4 rounded-xl font-black text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transform hover:-translate-y-1 active:translate-y-0"
-                  style={{ 
+                  style={{
                     backgroundColor: popColor,
-                    boxShadow: input.trim() && !isSending 
-                      ? `0 10px 0 ${popColor}50, 0 10px 20px rgba(0,0,0,0.5)` 
+                    boxShadow: input.trim() && !isSending
+                      ? `0 10px 0 ${popColor}50, 0 10px 20px rgba(0,0,0,0.5)`
                       : 'none',
                     borderBottom: `4px solid rgba(0,0,0,0.2)`
                   }}

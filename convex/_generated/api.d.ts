@@ -10,6 +10,8 @@
 
 import type * as activities from "../activities.js";
 import type * as agents from "../agents.js";
+import type * as http from "../http.js";
+import type * as seed from "../seed.js";
 import type * as tasks from "../tasks.js";
 
 import type {
@@ -21,6 +23,8 @@ import type {
 declare const fullApi: ApiFromModules<{
   activities: typeof activities;
   agents: typeof agents;
+  http: typeof http;
+  seed: typeof seed;
   tasks: typeof tasks;
 }>;
 
